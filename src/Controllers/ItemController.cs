@@ -1,9 +1,12 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.Item;
+using BackendTechnicalAssetsManagement.src.Hubs;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using TechnicalAssetManagementApi.Dtos.Item;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
@@ -14,10 +17,16 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
+        private readonly IHubContext<DashboardHub> _hubContext;
+        private readonly ISummaryService _summaryService;
 
-        public ItemController(IItemService itemService)
+        public ItemController(IItemService itemService, IHubContext<DashboardHub> hubContext,ISummaryService summaryService)
         {
+
             _itemService = itemService;
+            _hubContext = hubContext;
+            _summaryService = summaryService;
+            
         }
 
         // GET: /api/item
@@ -51,7 +60,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             try
             {
                 var newItemDto = await _itemService.CreateItemAsync(createItemDto);
+                
                 var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
+                await BroadcastSummaryUpdate();
                 return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
             }
             catch (ItemService.DuplicateSerialNumberException ex)
@@ -78,6 +89,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                     var errorResponse = ApiResponse<object>.FailResponse("Update failed. Item not found.");
                     return NotFound(errorResponse);
                 }
+                await BroadcastSummaryUpdate();
                 var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
                 return Ok(successResponse);
             }
@@ -89,7 +101,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // DELETE: /api/item/5
-        [HttpDelete("archive{id}")]
+        [HttpDelete("archive/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteItem(Guid id)
         {
@@ -99,8 +111,16 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 var errorResponse = ApiResponse<object>.FailResponse("Delete failed. Item not found.");
                 return NotFound(errorResponse);
             }
+            await BroadcastSummaryUpdate();
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item deleted successfully.");
             return Ok(successResponse);
         }
+
+        private async Task BroadcastSummaryUpdate()
+        {
+            var updatedSummary = await _summaryService.GetOverallSummaryAsync();
+            await _hubContext.Clients.All.SendAsync("ReceiveDashboardUpdate", updatedSummary);
+        }
     }
+
 }

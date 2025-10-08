@@ -2,6 +2,7 @@ using AutoMapper;
 using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
+using BackendTechnicalAssetsManagement.src.Hubs;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Middleware;
@@ -86,6 +87,8 @@ builder.Services.AddSwaggerGen(options =>
 //});
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+builder.Services.AddSignalR();
+
 #region DI Registrations
 // Repository
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
@@ -169,6 +172,11 @@ if (app.Environment.IsDevelopment())
         options.Theme = ScalarTheme.DeepSpace;
     });
 }
+// SignalR Hubs
+app.MapHub<DashboardHub>("/dashboardHub");
+
+
+
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandler>();
 
