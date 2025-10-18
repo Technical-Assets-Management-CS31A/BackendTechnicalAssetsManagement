@@ -3,6 +3,7 @@ using BackendTechnicalAssetsManagement.src.Authorization;
 using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
+using BackendTechnicalAssetsManagement.src.Hubs;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Middleware;
@@ -199,5 +200,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+app.MapHub<SummaryHub>("/summaryHub");
 
 app.Run();
