@@ -45,6 +45,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOrStaff", policy =>
         policy.RequireRole("Admin", "Staff"));
 });
+//SignalR Services
+builder.Services.AddSignalR();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
@@ -111,6 +113,10 @@ builder.Services.AddScoped<IArchiveUserService, ArchiveUserService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 
+// Notification Service
+builder.Services.AddScoped<ISummaryNotificationService, SummaryNotificationService>();
+
+// Development Logger Service
 builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
 #endregion
 
@@ -179,6 +185,9 @@ if (app.Environment.IsDevelopment())
         options.Theme = ScalarTheme.DeepSpace;
     });
 }
+
+
+
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandler>();
 
@@ -189,5 +198,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 
 app.Run();

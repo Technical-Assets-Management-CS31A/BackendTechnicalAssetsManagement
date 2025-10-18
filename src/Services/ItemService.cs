@@ -14,14 +14,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
         private readonly IArchiveItemsService _archiveItemsService;
-        private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly ISummaryNotificationService _notificationService;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IArchiveItemsService archiveItemsService, ISummaryNotificationService summaryNotificationService)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
-            _hostEnvironment = hostEnvironment;
             _archiveItemsService = archiveItemsService;
+            _notificationService = summaryNotificationService;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -72,6 +72,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // ... rest of the saving code ...
             await _itemRepository.AddAsync(newItem);
             await _itemRepository.SaveChangesAsync();
+
+            // Notify summary updates
+            await _notificationService.NotifyItemSummaryUpdated();
+            await _notificationService.NotifyOverallSummaryUpdated();
 
             // 5. Map the final ENTITY (which now has Barcode and BarcodeImage) to the ItemDto (Output)
             return _mapper.Map<ItemDto>(newItem);
@@ -159,7 +163,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
             existingItem.UpdatedAt = DateTime.UtcNow;
 
             await _itemRepository.UpdateAsync(existingItem);
-            return await _itemRepository.SaveChangesAsync();
+
+            var success = await _itemRepository.SaveChangesAsync();
+
+            if (success)
+            {
+                await _notificationService.NotifyItemSummaryUpdated();
+                await _notificationService.NotifyOverallSummaryUpdated();
+            }
+
+            return success;
+
+
         }
 
         public async Task<bool> DeleteItemAsync(Guid id) // Basically archive
@@ -177,10 +192,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Delete the original item from the main table
             await _itemRepository.DeleteAsync(id);
 
-            // 5. Save the deletion change. This commits the removal of the item.
-            return await _itemRepository.SaveChangesAsync();
-            //await _itemRepository.DeleteAsync(id);
-            //return await _itemRepository.SaveChangesAsync();
+            await _notificationService.NotifyItemSummaryUpdated();
+            await _notificationService.NotifyOverallSummaryUpdated();
+
+
+            var success = await _itemRepository.SaveChangesAsync();
+
+            // ONLY notify if the save was successful
+            if (success)
+            {
+                await _notificationService.NotifyItemSummaryUpdated();
+                await _notificationService.NotifyOverallSummaryUpdated();
+            }
+
+            return success;
         }
         //Remove this after the Image validation is successfully working
 
