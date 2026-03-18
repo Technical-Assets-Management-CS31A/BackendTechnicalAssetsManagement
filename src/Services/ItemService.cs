@@ -253,6 +253,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return saved ? (true, string.Empty) : (false, "Failed to save RFID registration.");
         }
 
+        public async Task<(bool Success, string ErrorMessage)> UpdateItemLocationAsync(Guid itemId, string location)
+        {
+            var item = await _itemRepository.GetByIdAsync(itemId);
+            if (item == null)
+                return (false, "Item not found.");
+
+            item.Location = location;
+            item.UpdatedAt = DateTime.UtcNow;
+            await _itemRepository.UpdateAsync(item);
+            var saved = await _itemRepository.SaveChangesAsync();
+            return saved ? (true, string.Empty) : (false, "Failed to save location.");
+        }
+
         public async Task<(bool Success, string ErrorMessage)> DeleteItemAsync(Guid id) // Basically archive
         //TODO: Make sure that once deleted it will be pushed into the Item Archive
         {

@@ -224,6 +224,21 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidUid}' registered to item successfully."));
         }
 
+        // POST: /api/v1/items/{id}/update-location
+        // Called by ESP32 location tracker — updates the physical location of an item
+        [HttpPost("{id}/update-location")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateLocation(Guid id, [FromBody] UpdateLocationDto dto)
+        {
+            var (success, errorMessage) = await _itemService.UpdateItemLocationAsync(id, dto.Location);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, $"Location updated to '{dto.Location}'."));
+        }
+
         // DELETE: /api/item/5
         [HttpDelete("archive/{id}")]
         [Authorize(Roles = "Admin")]

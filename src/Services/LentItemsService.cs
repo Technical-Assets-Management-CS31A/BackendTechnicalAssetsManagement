@@ -195,9 +195,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 lentItem.LentAt = DateTime.Now;
                 await _repository.UpdateAsync(lentItem);
 
-                if (dto.ItemId.HasValue)
+                if (dto.ItemId != Guid.Empty)
                 {
-                    var item = await _itemRepository.GetByIdAsync(dto.ItemId.Value);
+                    var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                     if (item != null)
                     {
                         item.Status = ItemStatus.Borrowed;
