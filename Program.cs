@@ -48,10 +48,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add environment variables to configuration pipeline
 builder.Configuration.AddEnvironmentVariables();
 
-// Ensure barcode image generation is enabled in production
-BackendTechnicalAssetsManagement.src.Services.BarcodeGeneratorService.SkipImageGeneration = false;
-Console.WriteLine($"[Startup] Barcode image generation enabled: {!BackendTechnicalAssetsManagement.src.Services.BarcodeGeneratorService.SkipImageGeneration}");
-
 // Configure Kestrel server options
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
@@ -203,7 +199,6 @@ builder.Services.AddScoped<IArchiveLentItemsService, ArchiveLentItemsService>();
 builder.Services.AddScoped<IArchiveUserService, ArchiveUserService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
-builder.Services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
 builder.Services.AddScoped<IExcelReaderService, ExcelReaderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 

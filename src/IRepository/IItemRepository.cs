@@ -26,13 +26,6 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task<IEnumerable<Item>> GetAllAsync();
 
         /// <summary>
-        /// Gets Item By Barcode from the database.
-        /// </summary>
-        /// <param name="barcode"></param>
-        /// <returns></returns>
-        Task<Item?> GetByBarcodeAsync(string barcode);
-
-        /// <summary>
         /// Gets an item by its RFID UID tag.
         /// </summary>
         Task<Item?> GetByRfidUidAsync(string rfidUid);

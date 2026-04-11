@@ -19,16 +19,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
-        private readonly IBarcodeGeneratorService _barcodeGenerator;
         private readonly ILentItemsRepository _lentItemsRepository;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, IBarcodeGeneratorService barcodeGenerator, ILentItemsRepository lentItemsRepository)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, ILentItemsRepository lentItemsRepository)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
             _archiveItemsService = archiveItemsService;
-            _barcodeGenerator = barcodeGenerator;
             _lentItemsRepository = lentItemsRepository;
         }
 
@@ -63,29 +61,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new DuplicateSerialNumberException($"An item with serial number '{createItemDto.SerialNumber}' already exists.");
             }
 
-            string barcodeText = _barcodeGenerator.GenerateItemBarcode(createItemDto.SerialNumber);
+            // Map the DTO to the new Item entity
+            var newItem = _mapper.Map<Item>(createItemDto);
 
-            // 2. Generate the Barcode IMAGE bytes
-            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
-
-            // 3. Map the DTO (Input) to the new Item (Entity)
-            var newItem = _mapper.Map<Item>(createItemDto); 
-
-            // 4. MANUALLY SET the auto-generated values on the ENTITY
-            newItem.Barcode = barcodeText;
-            newItem.BarcodeImage = barcodeImageBytes;
-            newItem.Status = ItemStatus.Available; // Always set to Available for new items
+            // Set auto-generated values
+            newItem.Status = ItemStatus.Available;
 
             if (createItemDto.Image != null)
             {
                 newItem.ImageMimeType = createItemDto.Image.ContentType;
             }
 
-            // ... rest of the saving code ...
             await _itemRepository.AddAsync(newItem);
             await _itemRepository.SaveChangesAsync();
 
-            // 5. Map the final ENTITY (which now has Barcode and BarcodeImage) to the ItemDto (Output)
             return _mapper.Map<ItemDto>(newItem);
         }
 
@@ -100,14 +89,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var item = await _itemRepository.GetByIdAsync(id);
             return _mapper.Map<ItemDto>(item);
         }
-        public async Task<ItemDto?> GetItemByBarcodeAsync(string barcode)
-        {
-            var item = await _itemRepository.GetByBarcodeAsync(barcode);
-
-            // Use the existing mapper instance to convert Item to ItemDto
-            return _mapper.Map<ItemDto>(item);
-        }
-
         public async Task<ItemDto?> GetItemBySerialNumberAsync(string serialNumber)
         {
             var item = await _itemRepository.GetBySerialNumberAsync(serialNumber);
@@ -126,36 +107,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Check if the SerialNumber has changed
             if (updateItemDto.SerialNumber != null && existingItem.SerialNumber != updateItemDto.SerialNumber)
             {
-                // 1. Update the serial number
                 string newSerialNumber = updateItemDto.SerialNumber.ToUpperInvariant();
 
-                // Standardization check
                 if (!newSerialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
                 {
                     newSerialNumber = $"SN-{newSerialNumber}";
                 }
 
-                // Check for duplication on the *new* serial number
                 var existingItemWithNewSN = await _itemRepository.GetBySerialNumberAsync(newSerialNumber);
-                // Ensure the duplicate isn't the item we are currently updating
                 if (existingItemWithNewSN != null && existingItemWithNewSN.Id != id)
                 {
                     throw new DuplicateSerialNumberException($"An item with serial number '{newSerialNumber}' already exists.");
                 }
 
                 existingItem.SerialNumber = newSerialNumber;
-
-                // **The Critical Step: Re-generate the Barcode TEXT and IMAGE**
-                // Since we checked for null above, we know existingItem.SerialNumber will be non-null here.
-
-                // 2. Generate the Barcode TEXT value
-                string barcodeText = _barcodeGenerator.GenerateItemBarcode(existingItem.SerialNumber);
-
-                // 3. Update Barcode and BarcodeImage
-                existingItem.Barcode = barcodeText;
-                existingItem.BarcodeImage = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
             }
-            // ELSE: If updateItemDto.SerialNumber is null, the existing SerialNumber, Barcode, and BarcodeImage are preserved.
 
             if (updateItemDto.Image != null)
             {
@@ -178,33 +144,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             await _itemRepository.UpdateAsync(existingItem);
             return await _itemRepository.SaveChangesAsync();
-        }
-
-        public async Task<(bool Success, string ErrorMessage)> PatchItemStatusAsync(string barcode, ItemStatus status)
-        {
-            if (status != ItemStatus.Available && status != ItemStatus.Borrowed)
-                return (false, "Only 'Available' or 'Borrowed' statuses are allowed via NFC scanner.");
-
-            var item = await _itemRepository.GetByBarcodeAsync(barcode);
-            if (item == null)
-                return (false, "Item not found.");
-
-            var lentItem = await _lentItemsRepository.GetActiveByItemIdAsync(item.Id);
-            if (lentItem == null)
-                return (false, "No active lent record found for this item.");
-
-            lentItem.Status = status == ItemStatus.Borrowed
-                ? LentItemsStatus.Borrowed.ToString()
-                : LentItemsStatus.Returned.ToString();
-
-            if (status == ItemStatus.Borrowed)
-                lentItem.LentAt = DateTime.Now;
-            else
-                lentItem.ReturnedAt = DateTime.Now;
-
-            await _lentItemsRepository.UpdateAsync(lentItem);
-            var saved = await _lentItemsRepository.SaveChangesAsync();
-            return saved ? (true, string.Empty) : (false, "Failed to save status change.");
         }
 
         public async Task<(bool Success, string ErrorMessage, ItemStatus? NewStatus)> ScanRfidAsync(string rfidUid)
@@ -301,11 +240,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
         }
         /// <summary>
-        /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID and barcode.
+        /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID.
         /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition, Image
-        /// The barcode will be generated with format: "ITEM-SN-{SerialNumber}"
-        /// Image column can contain file paths or URLs to load images from
-        /// All imported items are automatically assigned Status = Available
+        /// Image column can contain file paths or URLs to load images from.
+        /// All imported items are automatically assigned Status = Available.
         /// </summary>
         /// <param name="file">Excel file (.xlsx format only)</param>
         public async Task<ImportItemsResponseDto> ImportItemsFromExcelAsync(IFormFile file)
@@ -403,21 +341,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 // Generate GUID for the new item
                                 var newItemId = Guid.NewGuid();
 
-                                // Generate barcode text using the same structure as normal item creation
-                                string barcodeText = _barcodeGenerator.GenerateItemBarcode(serialNumber);
-
-                                // Generate barcode image bytes (may return null if SkiaSharp fails)
-                                byte[]? barcodeImageBytes = null;
-                                try
-                                {
-                                    barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
-                                }
-                                catch (Exception barcodeEx)
-                                {
-                                    Console.WriteLine($"[Import] Row {rowNumber}: Failed to generate barcode image: {barcodeEx.Message}");
-                                    // Continue without barcode image - text barcode will still be saved
-                                }
-
                                 // Handle image import (if image path/url is provided)
                                 byte[]? imageBytes = null;
                                 string? imageMimeType = null;
@@ -448,27 +371,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                                 var item = new Item
                                 {
-                                    Id = newItemId, // Use generated GUID
+                                    Id = newItemId,
                                     SerialNumber = serialNumber,
                                     ItemName = itemName,
                                     ItemType = itemType,
                                     ItemModel = itemModel,
                                     ItemMake = itemMake,
                                     Description = description,
-
-                                    // Enum Parsing with case-insensitive validation
                                     Category = Enum.TryParse<ItemCategory>(categoryValue, true, out var category) ? category : default,
                                     Condition = Enum.TryParse<ItemCondition>(conditionValue, true, out var condition) ? condition : default,
-                                    Status = ItemStatus.Available, // All imported items default to Available
-
-                                    // Set image information
+                                    Status = ItemStatus.Available,
                                     Image = imageBytes,
                                     ImageMimeType = imageMimeType,
-
-                                    // Set barcode information
-                                    Barcode = barcodeText,
-                                    BarcodeImage = barcodeImageBytes,
-
                                     CreatedAt = DateTime.UtcNow,
                                     UpdatedAt = DateTime.UtcNow
                                 };

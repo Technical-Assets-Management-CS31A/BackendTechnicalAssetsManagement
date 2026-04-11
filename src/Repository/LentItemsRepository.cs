@@ -1,5 +1,4 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
 
@@ -107,20 +106,6 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             {
                 _context.LentItems.Remove(itemToDelete);
             }
-        }
-
-        public AppDbContext GetDbContext()
-        {
-            return _context;
-        }
-
-        public async Task<LentItems?> GetByBarcodeAsync(string barcode)
-        {
-            return await _context.LentItems
-                .Include(li => li.User)
-                .Include(li => li.Teacher)
-                .Include(li => li.Item)
-                .FirstOrDefaultAsync(li => li.Barcode == barcode);
         }
 
         public async Task<LentItems?> GetActiveByItemIdAsync(Guid itemId)

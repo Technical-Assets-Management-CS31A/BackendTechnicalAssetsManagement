@@ -13,7 +13,6 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<LentItemsDto?> GetByIdAsync(Guid id);
-            Task<LentItemsDto?> GetByBarcodeAsync(string barcode);
             Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime);
 
             /// <summary>
@@ -28,8 +27,6 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Update
             Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
             Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto);
-            Task<bool> UpdateStatusByBarcodeAsync(string barcode, ScanLentItemDto dto);
-            Task<bool> ReturnItemByItemBarcodeAsync(string itemBarcode);
 
             // Delete
             Task<bool> SoftDeleteAsync(Guid id);
