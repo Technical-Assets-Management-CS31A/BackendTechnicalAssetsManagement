@@ -34,9 +34,6 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public bool IsHiddenFromUser { get; set; } = false;
 
-        public string? Barcode { get; set; }
-        public byte[]? BarcodeImage { get; set; }
-
         public byte[]? FrontStudentIdPicture { get; set; }
 
         public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed

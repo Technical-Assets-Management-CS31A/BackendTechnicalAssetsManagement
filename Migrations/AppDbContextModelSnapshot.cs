@@ -28,12 +28,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("BarcodeImage")
-                        .HasColumnType("bytea");
-
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("text");
@@ -69,6 +63,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("RfidUid")
+                        .HasColumnType("text");
+
                     b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasColumnType("text");
@@ -89,12 +86,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("BarcodeImage")
-                        .HasColumnType("bytea");
 
                     b.Property<string>("BorrowerFullName")
                         .IsRequired()
@@ -139,8 +130,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("StudentIdNumber")
                         .HasColumnType("text");
 
+                    b.Property<string>("StudentRfid")
+                        .HasColumnType("text");
+
                     b.Property<string>("SubjectTimeSchedule")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TagUid")
                         .HasColumnType("text");
 
                     b.Property<string>("TeacherFullName")
@@ -217,12 +214,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("BarcodeImage")
-                        .HasColumnType("bytea");
-
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("text");
@@ -258,6 +249,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RfidUid")
+                        .HasColumnType("text");
+
                     b.Property<string>("SerialNumber")
                         .HasColumnType("text");
 
@@ -270,6 +267,10 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RfidUid")
+                        .IsUnique()
+                        .HasFilter("\"RfidUid\" IS NOT NULL");
+
                     b.HasIndex("SerialNumber")
                         .IsUnique();
 
@@ -281,12 +282,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("BarcodeImage")
-                        .HasColumnType("bytea");
 
                     b.Property<string>("BorrowerFullName")
                         .IsRequired()
@@ -334,8 +329,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("StudentIdNumber")
                         .HasColumnType("text");
 
+                    b.Property<string>("StudentRfid")
+                        .HasColumnType("text");
+
                     b.Property<string>("SubjectTimeSchedule")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TagUid")
                         .HasColumnType("text");
 
                     b.Property<string>("TeacherFullName")
@@ -542,6 +543,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("RfidUid")
+                        .HasColumnType("text");
+
                     b.Property<string>("Section")
                         .IsRequired()
                         .HasColumnType("text");
@@ -556,6 +560,10 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Year")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.HasIndex("RfidUid")
+                        .IsUnique()
+                        .HasFilter("\"RfidUid\" IS NOT NULL");
 
                     b.HasIndex("StudentIdNumber")
                         .IsUnique()

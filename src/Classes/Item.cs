@@ -12,9 +12,6 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? RfidUid { get; set; }
         public byte[]? Image { get; set; }
         public string? ImageMimeType { get; set; }
-        public string? Barcode { get; set; }
-
-        public byte[]? BarcodeImage { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;
         public string? ItemModel { get; set; }

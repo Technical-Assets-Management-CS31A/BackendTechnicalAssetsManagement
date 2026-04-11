@@ -1,5 +1,4 @@
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.Services;
 using Microsoft.EntityFrameworkCore;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
@@ -279,7 +278,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item1Id,
                     ItemName = "HDMI Cable 10ft",
                     SerialNumber = "SN-HDMI-001",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-HDMI-001"),
                     Category = ItemCategory.Electronics,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Borrowed
@@ -289,7 +287,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item2Id,
                     ItemName = "Wireless Microphone",
                     SerialNumber = "SN-MIC-002",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-MIC-002"),
                     Category = ItemCategory.MediaEquipment,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Borrowed
@@ -299,7 +296,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item3Id,
                     ItemName = "Portable Bluetooth Speaker",
                     SerialNumber = "SN-SPK-003",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-SPK-003"),
                     Category = ItemCategory.MediaEquipment,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Available
@@ -309,7 +305,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item4Id,
                     ItemName = "Wireless Mouse",
                     SerialNumber = "SN-MOUSE-004",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-MOUSE-004"),
                     Category = ItemCategory.Electronics,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Borrowed
@@ -319,7 +314,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item5Id,
                     ItemName = "Mechanical Keyboard",
                     SerialNumber = "SN-KB-005",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-KB-005"),
                     Category = ItemCategory.Electronics,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Available
@@ -329,7 +323,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item6Id,
                     ItemName = "Extension Wire 15ft",
                     SerialNumber = "SN-EXT-006",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-EXT-006"),
                     Category = ItemCategory.Electronics,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Available
@@ -339,7 +332,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item7Id,
                     ItemName = "HDMI Cable 6ft",
                     SerialNumber = "SN-HDMI-007",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-HDMI-007"),
                     Category = ItemCategory.Electronics,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Available
@@ -349,7 +341,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = item8Id,
                     ItemName = "USB Microphone",
                     SerialNumber = "SN-MIC-008",
-                    Barcode = BarcodeGeneratorService.GenerateItemBarcodeStatic("SN-MIC-008"),
                     Category = ItemCategory.MediaEquipment,
                     Condition = ItemCondition.Good,
                     Status = ItemStatus.Available
@@ -364,7 +355,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
                     ItemId = item1Id,
                     UserId = student1Id,
-                    Barcode = "LENT-" + DateTime.Now.ToString("yyyyMMdd") + "-001",
                     Status = "Borrowed",
                     LentAt = DateTime.Now.AddDays(-5)
                 },
@@ -374,7 +364,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = Guid.Parse("20000000-0000-0000-0000-000000000002"),
                     ItemId = item3Id,
                     UserId = student2Id,
-                    Barcode = "LENT-" + DateTime.Now.AddDays(-10).ToString("yyyyMMdd") + "-002",
                     Status = "Returned",
                     LentAt = DateTime.Now.AddDays(-10),
                     ReturnedAt = DateTime.Now.AddDays(-2)
@@ -385,7 +374,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     Id = Guid.Parse("20000000-0000-0000-0000-000000000003"),
                     ItemId = item2Id,
                     UserId = student3Id,
-                    Barcode = "LENT-" + DateTime.Now.ToString("yyyyMMdd") + "-003",
                     Status = "Borrowed",
                     LentAt = DateTime.Now.AddDays(-1)
                 },
@@ -396,7 +384,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     ItemId = item4Id,
                     UserId = teacher1Id,
                     TeacherId = teacher1Id,
-                    Barcode = "LENT-" + DateTime.Now.ToString("yyyyMMdd") + "-004",
                     Status = "Borrowed",
                     LentAt = DateTime.Now.AddDays(-3)
                 },
@@ -407,7 +394,6 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     ItemId = item5Id,
                     UserId = teacher2Id,
                     TeacherId = teacher2Id,
-                    Barcode = "LENT-" + DateTime.Now.AddDays(-30).ToString("yyyyMMdd") + "-005",
                     Status = "Returned",
                     LentAt = DateTime.Now.AddDays(-30),
                     ReturnedAt = DateTime.Now.AddDays(-15)
