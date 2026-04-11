@@ -30,9 +30,6 @@
 
         public bool IsHiddenFromUser { get; set; } = false;
 
-        public string? Barcode { get; set; }
-        public byte[]? BarcodeImage { get; set; }
-
         public byte[]? FrontStudentIdPicture { get; set; }
 
     }

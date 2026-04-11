@@ -5,6 +5,7 @@ using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalAssetManagementApi.Dtos.Item;
+
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
@@ -18,112 +19,79 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             _itemService = itemService;
         }
-        // POST: /api/item
+
+        // POST: /api/v1/items
         [HttpPost]
         public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
         {
             try
             {
                 var newItemDto = await _itemService.CreateItemAsync(createItemDto);
-                var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
-                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
+                var response = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
+                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, response);
             }
             catch (ItemService.DuplicateSerialNumberException ex)
             {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return Conflict(errorResponse);
+                return Conflict(ApiResponse<ItemDto>.FailResponse(ex.Message));
             }
             catch (ArgumentException ex)
             {
-                var response = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return BadRequest(response);
+                return BadRequest(ApiResponse<ItemDto>.FailResponse(ex.Message));
             }
         }
 
-
-        // GET: /api/item
+        // GET: /api/v1/items
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<ItemDto>>>> GetAllItems()
         {
-            
             var items = await _itemService.GetAllItemsAsync();
-            var response = ApiResponse<IEnumerable<ItemDto>>.SuccessResponse(items, "Items retrieved successfully.");
-            return Ok(response);
+            return Ok(ApiResponse<IEnumerable<ItemDto>>.SuccessResponse(items, "Items retrieved successfully."));
         }
 
-        // GET: /api/item/5
+        // GET: /api/v1/items/{id}
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemById(Guid id)
         {
             var item = await _itemService.GetItemByIdAsync(id);
             if (item == null)
-            {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
-            return Ok(successResponse);
+                return NotFound(ApiResponse<ItemDto>.FailResponse("Item not found."));
+            return Ok(ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully."));
         }
-        // [HttpGet("by-barcode/{barcode}")]
-        // public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemByBarcode(string barcodeText)
-        // {
-        //     var item = await _itemService.GetItemByBarcodeAsync(barcodeText);
-        //     if (item == null)
-        //     {
-        //         var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
-        //         return NotFound(errorResponse);
-        //     }
-        //     var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
-        //     return Ok(successResponse);
-        // }
 
+        // GET: /api/v1/items/by-serial/{serialNumber}
         [HttpGet("by-serial/{serialNumber}")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemBySerialNumber(string serialNumber)
         {
             var item = await _itemService.GetItemBySerialNumberAsync(serialNumber);
             if (item == null)
-            {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
-            return Ok(successResponse);
+                return NotFound(ApiResponse<ItemDto>.FailResponse("Item not found."));
+            return Ok(ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully."));
         }
+
+        // POST: /api/v1/items/import
         [HttpPost("import")]
         public async Task<ActionResult<ApiResponse<ImportItemsResponseDto>>> ImportItemsFromExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)
-            {
                 return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("No file uploaded."));
-            }
 
-            // Validate file extension - only accept .xlsx files
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (fileExtension != ".xlsx")
-            {
                 return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Only .xlsx files are allowed for import."));
-            }
 
-            // Validate MIME type as additional security
             var allowedMimeTypes = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
             if (!allowedMimeTypes.Contains(file.ContentType))
-            {
                 return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Invalid file type. Only Excel (.xlsx) files are allowed."));
-            }
 
             try
             {
                 var result = await _itemService.ImportItemsFromExcelAsync(file);
-                
-                // Check if no items were imported
+
                 if (result.SuccessCount == 0)
                 {
-                    var message = result.FailureCount > 0 
+                    var message = result.FailureCount > 0
                         ? $"Import failed. No items were imported. {result.FailureCount} row(s) had errors."
                         : "Import failed. No valid items found in the file.";
-                    
-                    // Return the result data even on failure so frontend can show details
                     return BadRequest(new ApiResponse<ImportItemsResponseDto>
                     {
                         Success = false,
@@ -132,20 +100,18 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                         Errors = result.Errors
                     });
                 }
-                
-                var successMessage = $"Import completed. Success: {result.SuccessCount}, Failed: {result.FailureCount}";
-                return Ok(ApiResponse<ImportItemsResponseDto>.SuccessResponse(result, successMessage));
+
+                return Ok(ApiResponse<ImportItemsResponseDto>.SuccessResponse(result,
+                    $"Import completed. Success: {result.SuccessCount}, Failed: {result.FailureCount}"));
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here with a logging framework if you have one.
-                return StatusCode(500, ApiResponse<ImportItemsResponseDto>.FailResponse($"An error occurred during the import process: {ex.Message}"));
+                return StatusCode(500, ApiResponse<ImportItemsResponseDto>.FailResponse(
+                    $"An error occurred during the import process: {ex.Message}"));
             }
         }
 
-        
-
-        // PUT: /api/item/5
+        // PATCH: /api/v1/items/{id}
         [HttpPatch("{id}")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemsDto updateItemDto)
         {
@@ -153,37 +119,17 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             {
                 var success = await _itemService.UpdateItemAsync(id, updateItemDto);
                 if (!success)
-                {
-                    var errorResponse = ApiResponse<object>.FailResponse("Update failed. Item not found.");
-                    return NotFound(errorResponse);
-                }
-                var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
-                return Ok(successResponse);
+                    return NotFound(ApiResponse<object>.FailResponse("Update failed. Item not found."));
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Item updated successfully."));
             }
-            catch (ArgumentException ex) // Catch invalid file uploads on update
+            catch (ArgumentException ex)
             {
-                var errorResponse = ApiResponse<object>.FailResponse(ex.Message);
-                return BadRequest(errorResponse);
+                return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
             }
-        }
-
-        // PATCH: /api/v1/items/status/{barcode}
-        // Intended for IoT NFC scanners - no auth required, only allows Available/Borrowed
-        [HttpPatch("status/{barcode}")]
-        [AllowAnonymous]
-        public async Task<ActionResult<ApiResponse<object>>> PatchItemStatus(string barcode, [FromBody] PatchItemStatusDto dto)
-        {
-            var (success, errorMessage) = await _itemService.PatchItemStatusAsync(barcode, dto.Status);
-            if (!success)
-            {
-                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
-                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
-            }
-            return Ok(ApiResponse<object>.SuccessResponse(null, $"Item status updated to '{dto.Status}'."));
         }
 
         // PATCH: /api/v1/items/rfid-scan/{rfidUid}
-        // Called by IoT NFC/RFID scanner - toggles status between Available and Borrowed
+        // Called by IoT RFID scanner — toggles item status between Available and Borrowed
         [HttpPatch("rfid-scan/{rfidUid}")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<object>>> ScanRfid(string rfidUid)
@@ -210,7 +156,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // POST: /api/v1/items/{id}/register-rfid
-        // Called by ESP32 in registration mode - assigns a scanned RFID UID to the specified item
+        // Called by ESP32 in registration mode — assigns a scanned RFID UID to the specified item
         [HttpPost("{id}/register-rfid")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<object>>> RegisterRfid(Guid id, [FromBody] RegisterRfidDto dto)
@@ -239,7 +185,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(ApiResponse<object>.SuccessResponse(null, $"Location updated to '{dto.Location}'."));
         }
 
-        // DELETE: /api/item/5
+        // DELETE: /api/v1/items/archive/{id}
         [HttpDelete("archive/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveItem(Guid id)
@@ -250,8 +196,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 var errorResponse = ApiResponse<object>.FailResponse($"Archive failed. {errorMessage}");
                 return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
             }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item Archived successfully.");
-            return Ok(successResponse);
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Item Archived successfully."));
         }
     }
 }

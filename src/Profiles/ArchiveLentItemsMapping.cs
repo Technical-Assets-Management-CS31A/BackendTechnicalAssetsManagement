@@ -44,10 +44,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // Map for Reading/Listing Archive DTOs
             CreateMap<ArchiveLentItems, ArchiveLentItemsDto>()
-                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
-                    src.BarcodeImage != null ?
-                    $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
-                    null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" :
@@ -55,12 +51,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // Map for Response after Restoration (Active Entity -> Archive DTO)
             CreateMap<LentItems, ArchiveLentItemsDto>()
-                // FIX: The active LentItems entity does not have a LentItemId field. 
-                // Ignoring it prevents it from defaulting to "00000000..." in the final JSON response.
-                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
-                    src.BarcodeImage != null ?
-                    $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
-                    null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom<ArchiveFrontStudentIdPictureResolver>());
 
             // Map for converting a retrieved Archive DTO into a Create DTO (for internal/update use)

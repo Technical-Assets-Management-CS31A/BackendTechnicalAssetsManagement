@@ -131,9 +131,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             // 2. Use AutoMapper to apply all the *other* non-null properties from the DTO.
-            // The AutoMapper ignore rules for SerialNumber, Barcode, and BarcodeImage are still necessary
-            // to prevent any accidental mapping that might be happening for other reasons, 
-            // but the manual logic above was the primary cause.
             _mapper.Map(updateItemDto, existingItem);
 
             // 3. Handle specific logic (image upload)
