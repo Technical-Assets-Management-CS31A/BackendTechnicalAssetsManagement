@@ -34,6 +34,11 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
 
         public bool IsHiddenFromUser { get; set; } = false;
 
+        public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed
+        public string? StudentRfid { get; set; }  // RFID UID of the student's ID card
+
+        public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 

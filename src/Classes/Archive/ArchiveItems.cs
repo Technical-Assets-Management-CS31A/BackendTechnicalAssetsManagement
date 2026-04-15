@@ -24,5 +24,6 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public string? Location { get; set; }
     }
 }

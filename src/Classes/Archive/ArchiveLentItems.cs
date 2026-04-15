@@ -41,6 +41,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public byte[]? FrontStudentIdPicture { get; set; }
 
+        public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }

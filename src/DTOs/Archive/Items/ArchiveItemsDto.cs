@@ -18,7 +18,10 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
 
         public ItemCategory Category { get; set; }
         public ItemCondition Condition { get; set; }
+        public ItemStatus Status { get; set; }
 
-        public DateTime ArchivedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string? Location { get; set; }
     }
 }

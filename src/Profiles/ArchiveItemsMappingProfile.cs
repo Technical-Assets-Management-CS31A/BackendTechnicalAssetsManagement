@@ -17,7 +17,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                     null))
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category.ToString())))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())))
-                .ForMember(dest => dest.ArchivedAt, opt => opt.MapFrom(src => src.CreatedAt));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<ItemStatus>(src.Status.ToString())));
 
             CreateMap<ArchiveItems, CreateArchiveItemsDto>();
             CreateMap<ArchiveItems, UpdateArchiveItemsDto>();

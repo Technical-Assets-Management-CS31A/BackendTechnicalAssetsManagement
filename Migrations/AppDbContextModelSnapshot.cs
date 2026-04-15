@@ -63,6 +63,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RfidUid")
                         .HasColumnType("nvarchar(max)");
 
@@ -116,6 +119,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReservedFor")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ReturnedAt")
                         .HasColumnType("datetime2");
@@ -475,6 +481,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Province")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RfidUid")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Section")

@@ -108,9 +108,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Item>()
                 .Property(i => i.Status)
                 .HasConversion<string>();
-            modelBuilder.Entity<LentItems>()
-                .Property(li => li.Remarks)
-                .HasConversion<string>();
 
             // --- INHERITANCE STRATEGY CONFIGURATION (Table-Per-Type) ---
             // Your User class has several derived classes (Student, Teacher, etc.).
