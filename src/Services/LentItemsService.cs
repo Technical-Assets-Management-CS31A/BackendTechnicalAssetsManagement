@@ -6,7 +6,6 @@ using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
-using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Utils;
 using TechnicalAssetManagementApi.Dtos.Item;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
@@ -21,10 +20,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveLentItemsService _archiveLentItemsService;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
-        private readonly IBarcodeGeneratorService _barcodeGenerator;
         private readonly INotificationService _notificationService;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, IBarcodeGeneratorService barcodeGenerator, INotificationService notificationService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService)
         {
             _repository = repository;
             _mapper = mapper;
@@ -32,7 +30,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _itemRepository = itemRepository;
             _archiveLentItemsService = archiveLentItemsService;
             _userService = userService;
-            _barcodeGenerator = barcodeGenerator;
             _notificationService = notificationService;
         }
 
@@ -176,16 +173,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
-            // Generate the new barcode before saving
-            string barcodeText = await _barcodeGenerator.GenerateLentItemBarcodeAsync();
-            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
-
-            // Set the barcode information
-            lentItem.Barcode = barcodeText;
-            lentItem.BarcodeImage = barcodeImageBytes;
-
             await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync(); // This saves the item with the barcode
+            await _repository.SaveChangesAsync();
 
             // TODO: Remove auto-approve before production
             // Auto-approve pending requests from RFID borrow
@@ -354,17 +343,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
             }
 
-            // 4. Generate the new barcode before saving
-            string barcodeText = await _barcodeGenerator.GenerateLentItemBarcodeAsync();
-            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
-
-            // Set the barcode information
-            lentItem.Barcode = barcodeText;
-            lentItem.BarcodeImage = barcodeImageBytes;
-
             // 5. Add the fully-populated object to the repository and save.
             await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync(); // This saves the item with the barcode
+            await _repository.SaveChangesAsync();
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
             return _mapper.Map<LentItemsDto>(createdItem);
@@ -381,12 +362,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
         public async Task<LentItemsDto?> GetByIdAsync(Guid id)
         {
             var item = await _repository.GetByIdAsync(id);
-            return _mapper.Map<LentItemsDto?>(item);
-        }
-
-        public async Task<LentItemsDto?> GetByBarcodeAsync(string barcode)
-        {
-            var item = await _repository.GetByBarcodeAsync(barcode);
             return _mapper.Map<LentItemsDto?>(item);
         }
 
@@ -676,52 +651,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 4. Save the changes to the database.
             await _repository.UpdateAsync(lentItem);
-            return await _repository.SaveChangesAsync();
-        }
-
-        public async Task<bool> UpdateStatusByBarcodeAsync(string barcode, ScanLentItemDto dto)
-        {
-            var entity = await _repository.GetByBarcodeAsync(barcode);
-            if (entity == null)
-            {
-                return false;
-            }
-
-            // Use the existing UpdateStatusAsync logic with the found entity's ID
-            return await UpdateStatusAsync(entity.Id, dto);
-        }
-
-        public async Task<bool> ReturnItemByItemBarcodeAsync(string itemBarcode)
-        {
-            // 1. Find the item by its barcode
-            var item = await _itemRepository.GetByBarcodeAsync(itemBarcode);
-            if (item == null)
-            {
-                return false; // Item not found
-            }
-
-            // 2. Find the active lent item for this item (not returned yet)
-            var allLentItems = await _repository.GetAllAsync();
-            var activeLentItem = allLentItems.FirstOrDefault(li => 
-                li.ItemId == item.Id && 
-                !(li.Status ?? string.Empty).Equals("Returned", StringComparison.OrdinalIgnoreCase));
-
-            if (activeLentItem == null)
-            {
-                return false; // No active lent item found for this item
-            }
-
-            // 3. Update the lent item status to "Returned" and set ReturnedAt timestamp
-            activeLentItem.Status = "Returned";
-            activeLentItem.ReturnedAt = DateTime.Now;
-
-            // 4. Update the item status to Available
-            item.Status = ItemStatus.Available;
-            item.UpdatedAt = DateTime.Now;
-
-            // 5. Save the changes
-            await _itemRepository.UpdateAsync(item);
-            await _repository.UpdateAsync(activeLentItem);
             return await _repository.SaveChangesAsync();
         }
 

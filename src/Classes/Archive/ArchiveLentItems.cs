@@ -9,7 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
 
-        public Guid ItemId { get; set; }
+        public Guid? ItemId { get; set; }
         public Item? Item { get; set; }
         public string ItemName { get; set; } = string.Empty;
 
@@ -36,12 +36,14 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public bool IsHiddenFromUser { get; set; } = false;
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        public string? Barcode { get; set; }
-        public byte[]? BarcodeImage { get; set; }
+        public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed
+        public string? StudentRfid { get; set; }  // RFID UID of the student's ID card
 
         public byte[]? FrontStudentIdPicture { get; set; }
+
+        public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 }

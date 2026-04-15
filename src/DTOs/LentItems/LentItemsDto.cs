@@ -43,9 +43,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
         public string Remarks { get; set; } = string.Empty;
         public bool IsHiddenFromUser { get; set; }
 
-        public string? Barcode { get; set; }
-        public string? BarcodeImage { get; set; }
-        
         public string? FrontStudentIdPicture { get; set; }
     }
 

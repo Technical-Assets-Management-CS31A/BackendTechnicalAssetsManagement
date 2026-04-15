@@ -109,20 +109,6 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             }
         }
 
-        public AppDbContext GetDbContext()
-        {
-            return _context;
-        }
-
-        public async Task<LentItems?> GetByBarcodeAsync(string barcode)
-        {
-            return await _context.LentItems
-                .Include(li => li.User)
-                .Include(li => li.Teacher)
-                .Include(li => li.Item)
-                .FirstOrDefaultAsync(li => li.Barcode == barcode);
-        }
-
         public async Task<LentItems?> GetActiveByItemIdAsync(Guid itemId)
         {
             return await _context.LentItems

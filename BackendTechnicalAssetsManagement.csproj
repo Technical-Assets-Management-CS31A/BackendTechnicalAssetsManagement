@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -35,10 +36,6 @@
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.9" />
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.5.3" />
-		<PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
-		<PackageReference Include="SkiaSharp" Version="3.116.1" />
-		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
-		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.3" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
 	</ItemGroup>	
 

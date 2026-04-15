@@ -8,8 +8,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
     {
         public Guid Id { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
-        public string? Barcode { get; set; }
-        public string? BarcodeImage { get; set; }
+        public string? RfidUid { get; set; }
         public string? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;
@@ -19,7 +18,10 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
 
         public ItemCategory Category { get; set; }
         public ItemCondition Condition { get; set; }
+        public ItemStatus Status { get; set; }
 
-        public DateTime ArchivedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string? Location { get; set; }
     }
 }

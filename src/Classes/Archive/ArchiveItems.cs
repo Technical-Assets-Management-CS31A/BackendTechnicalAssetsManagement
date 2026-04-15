@@ -9,8 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         [Key]
         public Guid Id { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
-        public string? Barcode { get; set; }
-        public byte[]? BarcodeImage { get; set; }
+        public string? RfidUid { get; set; }
         public byte[]? Image { get; set; }
         public string? ImageMimeType { get; set; }
         public string ItemName { get; set; } = string.Empty;
@@ -25,5 +24,6 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public string? Location { get; set; }
     }
 }

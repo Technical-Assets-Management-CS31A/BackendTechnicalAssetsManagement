@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411164623_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,9 +66,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("RfidUid")
                         .HasColumnType("nvarchar(max)");
 
@@ -107,7 +107,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<bool>("IsHiddenFromUser")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("ItemId")
+                    b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ItemName")
@@ -119,9 +119,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ReservedFor")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ReturnedAt")
                         .HasColumnType("datetime2");
@@ -483,9 +480,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Province")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RfidUid")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Section")
                         .HasColumnType("nvarchar(max)");
 
@@ -593,17 +587,16 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Teacher", "Teacher")
                         .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("TeacherId");
 
                     b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Item");
 

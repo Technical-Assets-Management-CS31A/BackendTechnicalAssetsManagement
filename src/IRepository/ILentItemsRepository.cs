@@ -1,5 +1,4 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.Data;
 
 namespace BackendTechnicalAssetsManagement.src.IRepository
 {
@@ -16,9 +15,7 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task PermaDeleteAsync(Guid id);
 
         Task<bool> SaveChangesAsync();
-        
-        AppDbContext GetDbContext();
-        Task<LentItems?> GetByBarcodeAsync(string barcode);
+
         Task<LentItems?> GetActiveByItemIdAsync(Guid itemId);
     }
 }

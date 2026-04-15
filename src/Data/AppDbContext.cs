@@ -108,9 +108,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Item>()
                 .Property(i => i.Status)
                 .HasConversion<string>();
-            modelBuilder.Entity<LentItems>()
-                .Property(li => li.Remarks)
-                .HasConversion<string>();
 
             // --- INHERITANCE STRATEGY CONFIGURATION (Table-Per-Type) ---
             // Your User class has several derived classes (Student, Teacher, etc.).
@@ -150,6 +147,31 @@ namespace BackendTechnicalAssetsManagement.src.Data
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.HasIndex(e => e.SerialNumber).IsUnique();
+            });
+
+            // Configure ArchiveLentItems relationships to prevent cascade delete issues
+            modelBuilder.Entity<ArchiveLentItems>(entity =>
+            {
+                // Make Item FK optional and disable cascade delete
+                // This prevents issues when the referenced item is deleted/archived
+                entity.HasOne(e => e.Item)
+                    .WithMany()
+                    .HasForeignKey(e => e.ItemId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
+
+                // User and Teacher FKs are already nullable, but ensure no cascade delete
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
+
+                entity.HasOne(e => e.Teacher)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeacherId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
             });
             // Configure unique index for StudentIdNumber with database-specific filter syntax
             var studentIndex = modelBuilder.Entity<Student>()

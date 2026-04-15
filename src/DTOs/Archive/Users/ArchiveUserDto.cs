@@ -41,6 +41,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Users
         public string? PostalCode { get; set; }
         public string? FrontStudentIdPicture { get; set; } // Changed byte[] to string
         public string? BackStudentIdPicture { get; set; }   // Changed byte[] to string
+        public string? RfidUid { get; set; }  // RFID UID of the student's ID card
     }
 
     public class ArchiveTeacherDto : ArchiveUserDto

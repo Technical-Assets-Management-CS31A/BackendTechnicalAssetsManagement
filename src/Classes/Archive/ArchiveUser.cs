@@ -34,6 +34,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? PostalCode { get; set; }
         public byte[]? FrontStudentIdPicture { get; set; }
         public byte[]? BackStudentIdPicture { get; set; }
+        public string? RfidUid { get; set; }  // RFID UID of the student's ID card
     }
     public class ArchiveTeacher : ArchiveUser
     {
