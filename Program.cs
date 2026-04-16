@@ -464,8 +464,8 @@ app.MapGet("/", () => Results.Json(new
 /// Start the application and begin listening for HTTP requests
 /// </summary>
 
-// Add super admin if none exists (for production deployment)
-// await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
+// Apply pending migrations and seed data on startup
+await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
 
 app.Run();
 #endregion

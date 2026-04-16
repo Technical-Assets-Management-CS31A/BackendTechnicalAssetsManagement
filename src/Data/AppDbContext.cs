@@ -86,7 +86,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             base.OnModelCreating(modelBuilder);
             
             // Seed the database with initial data
-            // modelBuilder.Seed(); // Commented out - seed data handled by SuperAdminSeeder instead
+            modelBuilder.Seed();
 
             // --- ENUM TO STRING CONVERSIONS ---
             // By default, EF Core stores enums in the database as integers (0, 1, 2, etc.).

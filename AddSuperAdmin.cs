@@ -42,12 +42,13 @@ public static class SuperAdminSeeder
                 var superAdmin = new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "admin",
-                    Email = "admin@yourdomain.com",
-                    FirstName = "System",
-                    LastName = "Administrator",
+                    Username = "superadmin",
+                    Email = "superadmin@gmail.com",
+                    FirstName = "Super",
+                    LastName = "Admin",
                     PasswordHash = passwordHasher.HashPassword("@Pass123"),
-                    UserRole = UserRole.SuperAdmin
+                    UserRole = UserRole.SuperAdmin,
+                    Status = "Active"
                 };
 
                 context.Users.Add(superAdmin);
