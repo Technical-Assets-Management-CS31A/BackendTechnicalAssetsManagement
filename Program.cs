@@ -3,7 +3,7 @@
 /// 
 /// This file configures and initializes the ASP.NET Core web application with:
 /// - JWT Authentication & Authorization
-/// - Entity Framework with SQL Server
+/// - Entity Framework with Supabase (PostgreSQL)
 /// - Swagger/OpenAPI documentation
 /// - CORS policies for frontend integration
 /// - Dependency injection container setup
@@ -231,80 +231,24 @@ builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 
 #region Database Configuration
 /// <summary>
-/// Configure Entity Framework DbContext with flexible provider selection
-/// Supports: SQL Server (local), PostgreSQL (local/Railway), Supabase
+/// Configure Entity Framework DbContext with Supabase (PostgreSQL)
 /// </summary>
-var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
-string? connectionString = null;
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// Select connection string based on provider
-switch (databaseProvider.ToLower())
-{
-    case "sqlserver":
-        connectionString = builder.Configuration.GetConnectionString("SqlServer") 
-            ?? builder.Configuration.GetConnectionString("DefaultConnection");
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
-        break;
+var connectionString = builder.Configuration.GetConnectionString("Supabase")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Supabase connection string is not configured.");
 
-    case "postgresql":
-        connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
-            ?? builder.Configuration.GetConnectionString("DefaultConnection");
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
-        break;
-
-    case "supabase":
-        connectionString = builder.Configuration.GetConnectionString("Supabase") 
-            ?? builder.Configuration.GetConnectionString("DefaultConnection");
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
-        break;
-
-    default:
-        // Fallback to environment-based selection (legacy behavior)
-        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        if (builder.Environment.IsDevelopment())
-        {
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(connectionString));
-        }
-        else
-        {
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(connectionString));
-        }
-        break;
-}
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 #endregion
 
 #region Health Checks
 /// <summary>
 /// Configure health checks for monitoring application and database status
 /// </summary>
-// Validate that connection string is configured
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException($"The database connection string for provider '{databaseProvider}' was not found in the configuration.");
-}
-
-// Add health checks for database connectivity based on provider
-var healthChecks = builder.Services.AddHealthChecks();
-switch (databaseProvider.ToLower())
-{
-    case "sqlserver":
-        healthChecks.AddSqlServer(connectionString, name: "SQL Server");
-        break;
-    case "postgresql":
-        healthChecks.AddNpgSql(connectionString, name: "PostgreSQL");
-        break;
-    case "supabase":
-        healthChecks.AddNpgSql(connectionString, name: "Supabase PostgreSQL");
-        break;
-}
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: "Supabase PostgreSQL");
 #endregion
 
 #region Custom Extension Services

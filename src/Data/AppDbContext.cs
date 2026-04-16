@@ -173,20 +173,11 @@ namespace BackendTechnicalAssetsManagement.src.Data
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired(false);
             });
-            // Configure unique index for StudentIdNumber with database-specific filter syntax
-            var studentIndex = modelBuilder.Entity<Student>()
+            // Configure unique index for StudentIdNumber (PostgreSQL syntax)
+            modelBuilder.Entity<Student>()
                .HasIndex(s => s.StudentIdNumber)
-               .IsUnique();
-            
-            // Apply database-specific filter syntax
-            if (Database.IsNpgsql())
-            {
-                studentIndex.HasFilter("(\"StudentIdNumber\" IS NOT NULL AND \"StudentIdNumber\" <> '')");
-            }
-            else if (Database.IsSqlServer())
-            {
-                studentIndex.HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
-            }
+               .IsUnique()
+               .HasFilter("(\"StudentIdNumber\" IS NOT NULL AND \"StudentIdNumber\" <> '')");
 
             // TODO: This is a good place to add more advanced configurations in the future, such as:
             // - Defining complex relationships (many-to-many).
