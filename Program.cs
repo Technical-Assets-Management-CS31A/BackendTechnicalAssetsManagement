@@ -3,7 +3,7 @@
 /// 
 /// This file configures and initializes the ASP.NET Core web application with:
 /// - JWT Authentication & Authorization
-/// - Entity Framework with SQL Server
+/// - Entity Framework with Supabase (PostgreSQL)
 /// - Swagger/OpenAPI documentation
 /// - CORS policies for frontend integration
 /// - Dependency injection container setup
@@ -231,46 +231,24 @@ builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 
 #region Database Configuration
 /// <summary>
-/// Configure Entity Framework DbContext with environment-based provider selection
+/// Configure Entity Framework DbContext with Supabase (PostgreSQL)
 /// </summary>
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// Choose DB provider based on environment
-if (builder.Environment.IsDevelopment())
-{
-    // Local development → SQL Server
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
-else
-{
-    // Production → Railway Postgres
-    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(connectionString));
-}
+var connectionString = builder.Configuration.GetConnectionString("Supabase")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Supabase connection string is not configured.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 #endregion
 
 #region Health Checks
 /// <summary>
 /// Configure health checks for monitoring application and database status
 /// </summary>
-// Validate that connection string is configured
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("The database connection string 'DefaultConnection' was not found in the configuration.");
-}
-
-// Add health checks for database connectivity
-var healthChecks = builder.Services.AddHealthChecks();
-if (builder.Environment.IsDevelopment())
-{
-    healthChecks.AddSqlServer(connectionString, name: "SQL Server");
-}
-else
-{
-    // healthChecks.AddNpgSql(connectionString, name: "PostgreSQL");
-}
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: "Supabase PostgreSQL");
 #endregion
 
 #region Custom Extension Services
@@ -430,8 +408,8 @@ app.MapGet("/", () => Results.Json(new
 /// Start the application and begin listening for HTTP requests
 /// </summary>
 
-// Add super admin if none exists (for production deployment)
-// await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
+// Apply pending migrations and seed data on startup
+await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
 
 app.Run();
 #endregion

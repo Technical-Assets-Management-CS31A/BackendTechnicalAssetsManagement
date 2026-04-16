@@ -3,8 +3,8 @@ using System;
 using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,145 +18,173 @@ namespace BackendTechnicalAssetsManagement.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.20")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveItems", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Condition")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("Image")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("ImageMimeType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemMake")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemModel")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RfidUid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.ToTable("ArchiveItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000005"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Generic",
+                            ItemName = "HDMI Cable 6ft",
+                            ItemType = "Cable",
+                            SerialNumber = "SN-HDMI-007",
+                            Status = "Archived",
+                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000006"),
+                            Category = "MediaEquipment",
+                            Condition = "Defective",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Blue",
+                            ItemName = "USB Microphone",
+                            ItemType = "Microphone",
+                            SerialNumber = "SN-MIC-008",
+                            Status = "Archived",
+                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveLentItems", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("BorrowerFullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("BorrowerRole")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<bool>("IsHiddenFromUser")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("ItemId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("LentAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("ReservedFor")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ReturnedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Room")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentIdNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentRfid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SubjectTimeSchedule")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TagUid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TeacherFullName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -167,196 +195,336 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ArchiveLentItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000007"),
+                            BorrowerFullName = "David Ramos",
+                            BorrowerRole = "Teacher",
+                            CreatedAt = new DateTime(2025, 1, 10, 11, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000007"),
+                            ItemName = "HDMI Cable 6ft",
+                            LentAt = new DateTime(2025, 1, 10, 11, 0, 0, 0, DateTimeKind.Utc),
+                            ReturnedAt = new DateTime(2025, 1, 14, 11, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Room 301",
+                            Status = "Returned",
+                            SubjectTimeSchedule = "MA101 - 11:00 AM",
+                            TeacherFullName = "David Ramos",
+                            TeacherId = new Guid("00000003-0000-0000-0000-000000000004"),
+                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000003-0000-0000-0000-000000000004")
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ArchivedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("OriginalUserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("UserRole")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("ArchiveUsers");
 
                     b.UseTptMappingStrategy();
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000001"),
+                            ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "ana.reyes@gmail.com",
+                            FirstName = "Ana",
+                            LastName = "Reyes",
+                            OriginalUserId = new Guid("00000001-0000-0000-0000-000000000004"),
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = 1,
+                            Username = "areyes"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Item", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Condition")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("Image")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("ImageMimeType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemMake")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemModel")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ItemType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RfidUid")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SerialNumber")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RfidUid")
-                        .IsUnique()
-                        .HasFilter("[RfidUid] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("SerialNumber")
-                        .IsUnique()
-                        .HasFilter("[SerialNumber] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Items");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000001"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Generic",
+                            ItemName = "HDMI Cable 10ft",
+                            ItemType = "Cable",
+                            SerialNumber = "SN-HDMI-001",
+                            Status = "Borrowed",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000002"),
+                            Category = "MediaEquipment",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Shure",
+                            ItemName = "Wireless Microphone",
+                            ItemType = "Microphone",
+                            SerialNumber = "SN-MIC-002",
+                            Status = "Borrowed",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000003"),
+                            Category = "MediaEquipment",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "JBL",
+                            ItemName = "Portable Bluetooth Speaker",
+                            ItemType = "Speaker",
+                            SerialNumber = "SN-SPK-003",
+                            Status = "Available",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000004"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Logitech",
+                            ItemName = "Wireless Mouse",
+                            ItemType = "Peripheral",
+                            SerialNumber = "SN-MOUSE-004",
+                            Status = "Borrowed",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000005"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Keychron",
+                            ItemName = "Mechanical Keyboard",
+                            ItemType = "Peripheral",
+                            SerialNumber = "SN-KB-005",
+                            Status = "Available",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000006"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Generic",
+                            ItemName = "Extension Wire 15ft",
+                            ItemType = "Cable",
+                            SerialNumber = "SN-EXT-006",
+                            Status = "Available",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000007"),
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Generic",
+                            ItemName = "HDMI Cable 6ft",
+                            ItemType = "Cable",
+                            SerialNumber = "SN-HDMI-007",
+                            Status = "Archived",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("00000005-0000-0000-0000-000000000008"),
+                            Category = "MediaEquipment",
+                            Condition = "Defective",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Blue",
+                            ItemName = "USB Microphone",
+                            ItemType = "Microphone",
+                            SerialNumber = "SN-MIC-008",
+                            Status = "Archived",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("BorrowerFullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("BorrowerRole")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<bool>("IsHiddenFromUser")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ItemId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("LentAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("ReservedFor")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ReturnedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Room")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentIdNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentRfid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SubjectTimeSchedule")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TagUid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("TeacherFullName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -367,34 +535,128 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("LentItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000006-0000-0000-0000-000000000001"),
+                            BorrowerFullName = "John Doe",
+                            BorrowerRole = "Student",
+                            CreatedAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000001"),
+                            ItemName = "HDMI Cable 10ft",
+                            LentAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Lab 101",
+                            Status = "Borrowed",
+                            StudentIdNumber = "2023-0001",
+                            SubjectTimeSchedule = "CS301 - 8:00 AM",
+                            TeacherFullName = "",
+                            UpdatedAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000004-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000006-0000-0000-0000-000000000002"),
+                            BorrowerFullName = "Jane Smith",
+                            BorrowerRole = "Student",
+                            CreatedAt = new DateTime(2025, 4, 6, 10, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000003"),
+                            ItemName = "Portable Bluetooth Speaker",
+                            LentAt = new DateTime(2025, 4, 6, 10, 0, 0, 0, DateTimeKind.Utc),
+                            ReturnedAt = new DateTime(2025, 4, 14, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Lab 102",
+                            Status = "Returned",
+                            StudentIdNumber = "2023-0002",
+                            SubjectTimeSchedule = "IT201 - 10:00 AM",
+                            TeacherFullName = "",
+                            UpdatedAt = new DateTime(2025, 4, 14, 10, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000004-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000006-0000-0000-0000-000000000003"),
+                            BorrowerFullName = "Peter Jones",
+                            BorrowerRole = "Student",
+                            CreatedAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000002"),
+                            ItemName = "Wireless Microphone",
+                            LentAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Lab 103",
+                            Status = "Borrowed",
+                            StudentIdNumber = "2023-0003",
+                            SubjectTimeSchedule = "CS302 - 1:00 PM",
+                            TeacherFullName = "",
+                            UpdatedAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000004-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000006-0000-0000-0000-000000000004"),
+                            BorrowerFullName = "Alice Williams",
+                            BorrowerRole = "Teacher",
+                            CreatedAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000004"),
+                            ItemName = "Wireless Mouse",
+                            LentAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Room 201",
+                            Status = "Borrowed",
+                            SubjectTimeSchedule = "IT401 - 3:00 PM",
+                            TeacherFullName = "Alice Williams",
+                            TeacherId = new Guid("00000003-0000-0000-0000-000000000001"),
+                            UpdatedAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000003-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000006-0000-0000-0000-000000000005"),
+                            BorrowerFullName = "Roberto Cruz",
+                            BorrowerRole = "Teacher",
+                            CreatedAt = new DateTime(2025, 3, 17, 9, 0, 0, 0, DateTimeKind.Utc),
+                            IsHiddenFromUser = false,
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000005"),
+                            ItemName = "Mechanical Keyboard",
+                            LentAt = new DateTime(2025, 3, 17, 9, 0, 0, 0, DateTimeKind.Utc),
+                            ReturnedAt = new DateTime(2025, 4, 1, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Room 202",
+                            Status = "Returned",
+                            SubjectTimeSchedule = "CS201 - 9:00 AM",
+                            TeacherFullName = "Roberto Cruz",
+                            TeacherId = new Guid("00000003-0000-0000-0000-000000000002"),
+                            UpdatedAt = new DateTime(2025, 4, 1, 9, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000003-0000-0000-0000-000000000002")
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsRevoked")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -407,45 +669,91 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserRole")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
 
                     b.UseTptMappingStrategy();
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000001-0000-0000-0000-000000000001"),
+                            Email = "superadmin@gmail.com",
+                            FirstName = "Super",
+                            LastName = "Admin",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "SuperAdmin",
+                            Username = "superadmin"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000001-0000-0000-0000-000000000002"),
+                            Email = "maria.santos@gmail.com",
+                            FirstName = "Maria",
+                            LastName = "Santos",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Admin",
+                            Username = "msantos"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000001-0000-0000-0000-000000000003"),
+                            Email = "juan.delacruz@gmail.com",
+                            FirstName = "Juan",
+                            LastName = "Dela Cruz",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Admin",
+                            Username = "jdelacruz"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000001-0000-0000-0000-000000000004"),
+                            Email = "ana.reyes@gmail.com",
+                            FirstName = "Ana",
+                            LastName = "Reyes",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = "Admin",
+                            Username = "areyes"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveStaff", b =>
@@ -453,9 +761,25 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.ArchiveUser");
 
                     b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.ToTable("ArchiveStaff", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000002"),
+                            ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "miguel.torres@gmail.com",
+                            FirstName = "Miguel",
+                            LastName = "Torres",
+                            OriginalUserId = new Guid("00000002-0000-0000-0000-000000000003"),
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = 2,
+                            Username = "mtorres",
+                            Position = "IT Support"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveStudent", b =>
@@ -463,42 +787,61 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.ArchiveUser");
 
                     b.Property<byte[]>("BackStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("CityMunicipality")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Course")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("PostalCode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("ProfilePicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("Province")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RfidUid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Section")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Street")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentIdNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Year")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.ToTable("ArchiveStudents", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000004"),
+                            ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sofia.gonzales@gmail.com",
+                            FirstName = "Sofia",
+                            LastName = "Gonzales",
+                            OriginalUserId = new Guid("00000004-0000-0000-0000-000000000006"),
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = 4,
+                            Username = "sgonzales",
+                            Course = "Computer Science",
+                            Section = "B",
+                            StudentIdNumber = "2024-0001",
+                            Year = "1st Year"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveTeacher", b =>
@@ -506,9 +849,25 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.ArchiveUser");
 
                     b.Property<string>("Department")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.ToTable("ArchiveTeachers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000007-0000-0000-0000-000000000003"),
+                            ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "david.ramos@gmail.com",
+                            FirstName = "David",
+                            LastName = "Ramos",
+                            OriginalUserId = new Guid("00000003-0000-0000-0000-000000000004"),
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = 3,
+                            Username = "dramos",
+                            Department = "Multimedia Arts"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
@@ -516,9 +875,47 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.ToTable("Staff", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000002-0000-0000-0000-000000000001"),
+                            Email = "carlos.mendoza@gmail.com",
+                            FirstName = "Carlos",
+                            LastName = "Mendoza",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Staff",
+                            Username = "cmendoza",
+                            Position = "Lab Technician"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000002-0000-0000-0000-000000000002"),
+                            Email = "rosa.garcia@gmail.com",
+                            FirstName = "Rosa",
+                            LastName = "Garcia",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Staff",
+                            Username = "rgarcia",
+                            Position = "Equipment Manager"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000002-0000-0000-0000-000000000003"),
+                            Email = "miguel.torres@gmail.com",
+                            FirstName = "Miguel",
+                            LastName = "Torres",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = "Staff",
+                            Username = "mtorres",
+                            Position = "IT Support"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Student", b =>
@@ -526,56 +923,172 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<byte[]>("BackStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("CityMunicipality")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Course")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("GeneratedPassword")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<byte[]>("ProfilePicture")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<string>("Province")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RfidUid")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Section")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Street")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("StudentIdNumber")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Year")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasIndex("StudentIdNumber")
                         .IsUnique()
-                        .HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
+                        .HasFilter("(\"StudentIdNumber\" IS NOT NULL AND \"StudentIdNumber\" <> '')");
 
                     b.ToTable("Students", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000001"),
+                            Email = "john.doe@gmail.com",
+                            FirstName = "John",
+                            LastName = "Doe",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "jdoe",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "A",
+                            Street = "",
+                            StudentIdNumber = "2023-0001",
+                            Year = "3rd Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000002"),
+                            Email = "jane.smith@gmail.com",
+                            FirstName = "Jane",
+                            LastName = "Smith",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "jsmith",
+                            CityMunicipality = "",
+                            Course = "Information Technology",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "B",
+                            Street = "",
+                            StudentIdNumber = "2023-0002",
+                            Year = "2nd Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000003"),
+                            Email = "peter.jones@gmail.com",
+                            FirstName = "Peter",
+                            LastName = "Jones",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "pjones",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "A",
+                            Street = "",
+                            StudentIdNumber = "2023-0003",
+                            Year = "3rd Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000004"),
+                            Email = "maria.lopez@gmail.com",
+                            FirstName = "Maria",
+                            LastName = "Lopez",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "mlopez",
+                            CityMunicipality = "",
+                            Course = "Multimedia Arts",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "C",
+                            Street = "",
+                            StudentIdNumber = "2023-0004",
+                            Year = "1st Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000005"),
+                            Email = "carlos.rivera@gmail.com",
+                            FirstName = "Carlos",
+                            LastName = "Rivera",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "crivera",
+                            CityMunicipality = "",
+                            Course = "Information Technology",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "A",
+                            Street = "",
+                            StudentIdNumber = "2023-0005",
+                            Year = "2nd Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000006"),
+                            Email = "sofia.gonzales@gmail.com",
+                            FirstName = "Sofia",
+                            LastName = "Gonzales",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = "Student",
+                            Username = "sgonzales",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "B",
+                            Street = "",
+                            StudentIdNumber = "2024-0001",
+                            Year = "1st Year"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Teacher", b =>
@@ -583,9 +1096,59 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("Department")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.ToTable("Teachers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000003-0000-0000-0000-000000000001"),
+                            Email = "alice.williams@gmail.com",
+                            FirstName = "Alice",
+                            LastName = "Williams",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Teacher",
+                            Username = "awilliams",
+                            Department = "Information Technology"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000003-0000-0000-0000-000000000002"),
+                            Email = "roberto.cruz@gmail.com",
+                            FirstName = "Roberto",
+                            LastName = "Cruz",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Teacher",
+                            Username = "rcruz",
+                            Department = "Computer Science"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000003-0000-0000-0000-000000000003"),
+                            Email = "elena.fernandez@gmail.com",
+                            FirstName = "Elena",
+                            LastName = "Fernandez",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Active",
+                            UserRole = "Teacher",
+                            Username = "efernandez",
+                            Department = "Information Technology"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000003-0000-0000-0000-000000000004"),
+                            Email = "david.ramos@gmail.com",
+                            FirstName = "David",
+                            LastName = "Ramos",
+                            PasswordHash = "$2a$11$KvazBSuoG6q/bp/Ii4OABeCj5XwxRDx3pm8rD2HS7UAbp3lqAmneK",
+                            Status = "Inactive",
+                            UserRole = "Teacher",
+                            Username = "dramos",
+                            Department = "Multimedia Arts"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveLentItems", b =>
