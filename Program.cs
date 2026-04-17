@@ -182,7 +182,10 @@ builder.Services.AddSwaggerGen(options =>
 /// Configure AutoMapper for object-to-object mapping between entities and DTOs
 /// Automatically discovers and registers all mapping profiles in the assembly
 /// </summary>
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddMaps(typeof(Program).Assembly);
+});
 #endregion
 
 #region Dependency Injection Registration
@@ -409,7 +412,7 @@ app.MapGet("/", () => Results.Json(new
 /// </summary>
 
 // Apply pending migrations and seed data on startup
-await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
+// await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
 
 app.Run();
 #endregion
