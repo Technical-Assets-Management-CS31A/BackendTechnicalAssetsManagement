@@ -15,7 +15,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                     opt => opt.MapFrom(src =>
                         src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
                         : src.TeacherFullName))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom<FrontStudentIdPictureResolver>());
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.FrontStudentIdPicture != null
+                        ? $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}"
+                        : null));
 
             CreateMap<CreateLentItemDto, LentItems>()
                 .ForMember(dest => dest.LentAt, opt => opt.Ignore())
@@ -32,18 +35,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CreateLentItemsForGuestDto, LentItems>();
-        }
-    }
-
-    public class FrontStudentIdPictureResolver : IValueResolver<LentItems, LentItemsDto, string?>
-    {
-        public string? Resolve(LentItems source, LentItemsDto destination, string? destMember, ResolutionContext context)
-        {
-            if (source.FrontStudentIdPicture != null)
-            {
-                return $"data:image/png;base64,{Convert.ToBase64String(source.FrontStudentIdPicture)}";
-            }
-            return null;
         }
     }
 }
