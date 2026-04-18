@@ -202,6 +202,7 @@ builder.Services.AddScoped<IArchiveItemRepository, ArchiveItemsRepository>();
 builder.Services.AddScoped<IArchiveLentItemsRepository, ArchiveLentItemsRepository>();
 builder.Services.AddScoped<IArchiveUserRepository, ArchiveUserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
 
 // Business Logic Services (Scoped: new instance per HTTP request)
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -215,6 +216,7 @@ builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IExcelReaderService, ExcelReaderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 // Utility Services (Singleton: single instance for application lifetime)
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
@@ -350,8 +352,11 @@ app.MapScalarApiReference(options =>
 // Use Forwarded Headers Middleware (Must be before HttpsRedirection if we want to trust the proto)
 app.UseForwardedHeaders();
 
-// Redirect HTTP to HTTPS for security
-app.UseHttpsRedirection();
+// Redirect HTTP to HTTPS for security (skip in development to avoid CORS issues with Swagger)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Global exception handling middleware (catches all unhandled exceptions)
 app.UseMiddleware<GlobalExceptionHandler>();

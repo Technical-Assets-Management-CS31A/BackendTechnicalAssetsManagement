@@ -95,6 +95,16 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
 
+        // GET: api/v1/lentitems/borrowed
+        [HttpGet("borrowed")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAllBorrowedItems()
+        {
+            var items = await _service.GetAllBorrowedItemsAsync();
+            var response = ApiResponse<IEnumerable<LentItemsDto>>.SuccessResponse(items, $"Retrieved {items.Count()} borrowed item records.");
+            return Ok(response);
+        }
+
 
 
         // GET: api/v1/lentitems/{id}

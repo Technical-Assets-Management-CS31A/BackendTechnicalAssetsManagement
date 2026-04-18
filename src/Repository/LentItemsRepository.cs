@@ -72,6 +72,21 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<LentItems>> GetAllBorrowedItemsAsync()
+        {
+            // Returns every record that has ever been a borrow transaction,
+            // regardless of current status (Pending, Approved, Borrowed, Returned, etc.)
+            var borrowStatuses = new[] { "Pending", "Approved", "Borrowed", "Returned", "Canceled", "Denied" };
+
+            return await _context.LentItems
+                .Include(li => li.User)
+                .Include(li => li.Teacher)
+                .Include(li => li.Item)
+                .Where(li => borrowStatuses.Contains(li.Status))
+                .OrderByDescending(li => li.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<LentItems?> GetByIdAsync(Guid id)
         {
             return await _context.LentItems

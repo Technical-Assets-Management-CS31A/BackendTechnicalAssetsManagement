@@ -12,6 +12,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto);
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
+            Task<IEnumerable<LentItemsDto>> GetAllBorrowedItemsAsync();
             Task<LentItemsDto?> GetByIdAsync(Guid id);
             Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime);
 
