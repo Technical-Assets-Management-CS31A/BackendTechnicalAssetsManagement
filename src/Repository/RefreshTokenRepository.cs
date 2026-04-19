@@ -38,7 +38,7 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         foreach (var token in tokensToRevoke)
         {
             token.IsRevoked = true;
-            token.RevokedAt = DateTime.Now;
+            token.RevokedAt = DateTime.UtcNow;
         }
     }
 

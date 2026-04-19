@@ -20,14 +20,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
         private readonly ILentItemsRepository _lentItemsRepository;
+        private readonly ISupabaseStorageService _storageService;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, ILentItemsRepository lentItemsRepository)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, ILentItemsRepository lentItemsRepository, ISupabaseStorageService storageService)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
             _archiveItemsService = archiveItemsService;
             _lentItemsRepository = lentItemsRepository;
+            _storageService = storageService;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -69,7 +71,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (createItemDto.Image != null)
             {
-                newItem.ImageMimeType = createItemDto.Image.ContentType;
+                newItem.ImageUrl = await _storageService.UploadImageAsync(createItemDto.Image, "items");
             }
 
             await _itemRepository.AddAsync(newItem);
@@ -125,9 +127,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (updateItemDto.Image != null)
             {
-                // ImageConverterUtils is used by the Create flow and converts IFormFile to byte[].
-                existingItem.Image = ImageConverterUtils.ConvertIFormFileToByteArray(updateItemDto.Image);
-                existingItem.ImageMimeType = updateItemDto.Image.ContentType;
+                // Delete old image from storage if it exists
+                if (!string.IsNullOrEmpty(existingItem.ImageUrl))
+                    await _storageService.DeleteImageAsync(existingItem.ImageUrl);
+
+                existingItem.ImageUrl = await _storageService.UploadImageAsync(updateItemDto.Image, "items");
             }
 
             // 2. Use AutoMapper to apply all the *other* non-null properties from the DTO.
@@ -160,9 +164,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 : LentItemsStatus.Borrowed.ToString();
 
             if (isBorrowed)
-                lentItem.ReturnedAt = DateTime.Now;
+                lentItem.ReturnedAt = DateTime.UtcNow;
             else
-                lentItem.LentAt = DateTime.Now;
+                lentItem.LentAt = DateTime.UtcNow;
 
             await _lentItemsRepository.UpdateAsync(lentItem);
             var saved = await _lentItemsRepository.SaveChangesAsync();
@@ -339,21 +343,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 var newItemId = Guid.NewGuid();
 
                                 // Handle image import (if image path/url is provided)
-                                byte[]? imageBytes = null;
-                                string? imageMimeType = null;
+                                string? imageUrl = null;
                                 var imageValue = GetColumnValue(row, columnMapping, "Image");
                                 if (!string.IsNullOrWhiteSpace(imageValue))
                                 {
                                     try
                                     {
-                                        // Try to load image from file path or URL
-                                        imageBytes = await LoadImageFromPathOrUrlAsync(imageValue);
-                                        imageMimeType = GetMimeTypeFromPath(imageValue);
+                                        // If it's already a URL, store it directly; otherwise skip
+                                        if (Uri.TryCreate(imageValue, UriKind.Absolute, out var uri) &&
+                                            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                                        {
+                                            imageUrl = imageValue;
+                                        }
                                     }
                                     catch
                                     {
                                         // If image loading fails, continue without image
-                                        // Optional: Log the error
                                     }
                                 }
 
@@ -378,8 +383,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     Category = Enum.TryParse<ItemCategory>(categoryValue, true, out var category) ? category : default,
                                     Condition = Enum.TryParse<ItemCondition>(conditionValue, true, out var condition) ? condition : default,
                                     Status = ItemStatus.Available,
-                                    Image = imageBytes,
-                                    ImageMimeType = imageMimeType,
+                                    ImageUrl = imageUrl,
                                     CreatedAt = DateTime.UtcNow,
                                     UpdatedAt = DateTime.UtcNow
                                 };

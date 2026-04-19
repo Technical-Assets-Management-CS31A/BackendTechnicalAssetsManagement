@@ -32,8 +32,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// </summary>
             CreateMap<Student, StudentDto>()
                 .IncludeBase<User, UserDto>()
-                // FIX: Add explicit mapping for StudentIdNumber and all other Student-specific fields 
-                // to ensure they show up in the response.
                 .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
                 .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
                 .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
@@ -43,12 +41,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
                 .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode))
                 .ForMember(dest => dest.GeneratedPassword, opt => opt.MapFrom(src => src.GeneratedPassword))
-                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
-                    src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
-                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src => src.ProfilePictureUrl))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => src.FrontStudentIdPictureUrl))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src => src.BackStudentIdPictureUrl));
 
             /// <summary>
             /// Configures base mapping for all derived User types to their specific Profile DTOs (for 'GetMyProfile').
@@ -63,12 +58,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// </summary>
             CreateMap<Student, GetStudentProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()
-                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
-                    src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
-                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null))
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src => src.ProfilePictureUrl))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => src.FrontStudentIdPictureUrl))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src => src.BackStudentIdPictureUrl))
                 .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
                 .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
                 .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
@@ -131,41 +123,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// rule for all other simple properties. This is a clean and efficient pattern.
             /// </summary>
             CreateMap<UpdateStudentProfileDto, Student>()
-
-                // --- Step 1: Explicitly handle the complex properties (the images) ---
-                // Use the robust (src, dest) resolver to either update the image or keep the original.
-                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom((src, dest) =>
-                    (src.ProfilePicture != null && src.ProfilePicture.Length > 0)
-                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture)
-                        : dest.ProfilePicture))
-
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom((src, dest) =>
-                    (src.FrontStudentIdPicture != null && src.FrontStudentIdPicture.Length > 0)
-                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture)
-                        : dest.FrontStudentIdPicture))
-
-                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom((src, dest) =>
-                    (src.BackStudentIdPicture != null && src.BackStudentIdPicture.Length > 0)
-                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture)
-                        : dest.BackStudentIdPicture))
-
-                // --- Step 2: Use a generic rule for all other members ---
-                // This ForAllMembers rule will run for EVERY property, including the images.
-                .ForAllMembers(opts => {
-                    // We add a condition to tell this rule to IGNORE the properties we already handled.
-                    if (opts.DestinationMember.Name == nameof(Student.ProfilePicture) ||
-                        opts.DestinationMember.Name == nameof(Student.FrontStudentIdPicture) ||
-                        opts.DestinationMember.Name == nameof(Student.BackStudentIdPicture))
-                    {
-                        // By calling UseDestinationValue(), we tell the mapper to stop processing
-                        // and just keep the value that's already on the destination object.
-                        // This prevents this generic rule from interfering with our specific rules above.
-                        opts.UseDestinationValue();
-                    }
-
-                    // For all other properties (LastName, Course, etc.), apply the simple "ignore if null" rule.
-                    opts.Condition((src, dest, srcMember) => srcMember != null);
-                });
+                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.FrontStudentIdPictureUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.BackStudentIdPictureUrl, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
 
             /// <summary>

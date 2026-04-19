@@ -30,7 +30,13 @@
 
         public bool IsHiddenFromUser { get; set; } = false;
 
-        public byte[]? FrontStudentIdPicture { get; set; }
+        public string? FrontStudentIdPictureUrl { get; set; }
 
+        // Guest-specific fields
+        public string? GuestImageUrl { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+        public string? SupervisorName { get; set; }
     }
 }

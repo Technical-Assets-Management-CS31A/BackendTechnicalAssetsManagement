@@ -9,7 +9,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Create
             Task<LentItemsDto> AddAsync(CreateLentItemDto dto);
 
-            Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto);
+            Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto, Guid issuedById);
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<IEnumerable<LentItemsDto>> GetAllBorrowedItemsAsync();

@@ -9,8 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
         public Guid Id { get; set; }
         [Required]
         public string SerialNumber { get; set; } = string.Empty;
-        public byte[]? Image { get; set; }
-        public string? ImageMimeType { get; set; }
+        public string? ImageUrl { get; set; }
         [Required]
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;

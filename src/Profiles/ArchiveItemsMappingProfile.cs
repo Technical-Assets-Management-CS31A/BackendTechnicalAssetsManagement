@@ -11,10 +11,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         {
             // Entity -> DTO
             CreateMap<ArchiveItems, ArchiveItemsDto>()
-                .ForMember(dest => dest.Image, opt => opt.MapFrom(src =>
-                    src.Image != null && src.ImageMimeType != null ?
-                    $"data:{src.ImageMimeType};base64,{Convert.ToBase64String(src.Image)}" :
-                    null))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category.ToString())))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<ItemStatus>(src.Status.ToString())));
@@ -42,7 +39,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.ImageMimeType, opt => opt.MapFrom(src => src.ImageMimeType));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
 
         }
 

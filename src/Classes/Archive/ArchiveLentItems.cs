@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BackendTechnicalAssetsManagement.src.Classes
@@ -39,11 +39,17 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed
         public string? StudentRfid { get; set; }  // RFID UID of the student's ID card
 
-        public byte[]? FrontStudentIdPicture { get; set; }
+        public string? FrontStudentIdPictureUrl { get; set; }
+
+        // Guest-specific fields
+        public string? GuestImageUrl { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
 
         public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

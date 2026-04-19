@@ -2,7 +2,6 @@
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
-using BackendTechnicalAssetsManagement.src.Utils;
 using TechnicalAssetManagementApi.Dtos.Item;
 
 namespace BackendTechnicalAssetsManagement.src.Profiles
@@ -12,21 +11,16 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         public ItemMappingProfile()
         {
             CreateMap<Item, ItemDto>()
-                .ForMember(dest => dest.Image, opt => opt.MapFrom(src =>
-                    src.Image != null && src.ImageMimeType != null ?
-                    $"data:{src.ImageMimeType};base64,{Convert.ToBase64String(src.Image)}" :
-                    null));
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.ImageUrl));
 
             CreateMap<ItemDto, Item>();
 
             CreateMap<CreateItemsDto, Item>()
-                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.Image)))
-                .ForMember(dest => dest.ImageMimeType, opt => opt.Ignore());
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore());
 
             CreateMap<UpdateItemsDto, Item>()
-                .ForMember(dest => dest.Image, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.SerialNumber, opt => opt.Ignore())
-                .ForMember(dest => dest.ImageMimeType, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Item, CreateArchiveItemsDto>()

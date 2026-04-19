@@ -20,14 +20,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveUserService _archiveUserService;
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IExcelReaderService _excelReaderService;
+        private readonly ISupabaseStorageService _storageService;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService)
+        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService, ISupabaseStorageService storageService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _archiveUserService = archiveUserService;
             _passwordHashingService = passwordHashingService;
             _excelReaderService = excelReaderService;
+            _storageService = storageService;
         }
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
@@ -110,8 +112,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
             catch (ArgumentException)
             {
-                // Re-throw or handle as a custom exception that your middleware can catch
                 throw;
+            }
+
+            // Upload images to Supabase Storage and store URLs
+            if (dto.ProfilePicture != null)
+            {
+                if (!string.IsNullOrEmpty(studentToUpdate.ProfilePictureUrl))
+                    await _storageService.DeleteImageAsync(studentToUpdate.ProfilePictureUrl);
+                studentToUpdate.ProfilePictureUrl = await _storageService.UploadImageAsync(dto.ProfilePicture, "students/profile");
+            }
+            if (dto.FrontStudentIdPicture != null)
+            {
+                if (!string.IsNullOrEmpty(studentToUpdate.FrontStudentIdPictureUrl))
+                    await _storageService.DeleteImageAsync(studentToUpdate.FrontStudentIdPictureUrl);
+                studentToUpdate.FrontStudentIdPictureUrl = await _storageService.UploadImageAsync(dto.FrontStudentIdPicture, "students/id-front");
+            }
+            if (dto.BackStudentIdPicture != null)
+            {
+                if (!string.IsNullOrEmpty(studentToUpdate.BackStudentIdPictureUrl))
+                    await _storageService.DeleteImageAsync(studentToUpdate.BackStudentIdPictureUrl);
+                studentToUpdate.BackStudentIdPictureUrl = await _storageService.UploadImageAsync(dto.BackStudentIdPicture, "students/id-back");
             }
 
             _mapper.Map(dto, studentToUpdate);
@@ -446,20 +467,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return null;
             }
 
-            // Convert front and back ID pictures to base64 strings if they exist
-            string? frontIdPictureBase64 = null;
-            string? backIdPictureBase64 = null;
-
-            if (student.FrontStudentIdPicture != null && student.FrontStudentIdPicture.Length > 0)
-            {
-                frontIdPictureBase64 = $"data:image/jpeg;base64,{Convert.ToBase64String(student.FrontStudentIdPicture)}";
-            }
-
-            if (student.BackStudentIdPicture != null && student.BackStudentIdPicture.Length > 0)
-            {
-                backIdPictureBase64 = $"data:image/jpeg;base64,{Convert.ToBase64String(student.BackStudentIdPicture)}";
-            }
-
             return new
             {
                 Id = student.Id,
@@ -476,11 +483,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 CityMunicipality = student.CityMunicipality,
                 Email = student.Email,
                 PhoneNumber = student.PhoneNumber,
-                FrontIdPicture = frontIdPictureBase64,
-                BackIdPicture = backIdPictureBase64,
+                FrontIdPicture = student.FrontStudentIdPictureUrl,
+                BackIdPicture = student.BackStudentIdPictureUrl,
                 GeneratedPassword = student.GeneratedPassword
-            };
-        }
+            };        }
 
         public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
         {

@@ -32,7 +32,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     }
     public class Student : User
     {
-        public byte[]? ProfilePicture { get; set; }
+        public string? ProfilePictureUrl { get; set; }
 
         public string? StudentIdNumber { get; set; }
         public string Course { get; set; } = string.Empty;
@@ -43,8 +43,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string Province { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
 
-        public byte[]? FrontStudentIdPicture { get; set; }
-        public byte[]? BackStudentIdPicture { get; set; }
+        public string? FrontStudentIdPictureUrl { get; set; }
+        public string? BackStudentIdPictureUrl { get; set; }
 
         public string? GeneratedPassword { get; set; }
 

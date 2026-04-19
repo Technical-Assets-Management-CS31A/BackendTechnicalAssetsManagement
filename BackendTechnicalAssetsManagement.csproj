@@ -6,6 +6,7 @@
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e688fcac-b271-417b-b45f-04285037742e</UserSecretsId>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -30,6 +31,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.20" />
 		<PackageReference Include="Scalar.AspNetCore" Version="2.8.4" />
+		<PackageReference Include="Supabase" Version="1.1.1" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.9" />
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
@@ -44,7 +46,14 @@
 	  <Content Remove="appsettings.Development.json" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Include="appsettings.Development.json" />
+	  <Content Include="appsettings.Development.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include=".env">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>

@@ -22,8 +22,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
         private readonly IActivityLogService _activityLogService;
+        private readonly ISupabaseStorageService _storageService;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService, IActivityLogService activityLogService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService, IActivityLogService activityLogService, ISupabaseStorageService storageService)
         {
             _repository = repository;
             _mapper = mapper;
@@ -33,6 +34,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userService = userService;
             _notificationService = notificationService;
             _activityLogService = activityLogService;
+            _storageService = storageService;
         }
 
         // Create
@@ -90,8 +92,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.Now;
-                        lentItem.LentAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        lentItem.LentAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
                     else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
@@ -99,7 +101,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                              dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
                         // Don't set LentAt for Reserved/Pending/Approved status
                         await _itemRepository.UpdateAsync(item);
                     }
@@ -148,7 +150,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (user is Student student)
                     {
                         lentItem.StudentIdNumber = student.StudentIdNumber;
-                        lentItem.FrontStudentIdPicture = student.FrontStudentIdPicture;
+                        lentItem.FrontStudentIdPictureUrl = student.FrontStudentIdPictureUrl;
                     }
                 }
                 else
@@ -183,7 +185,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (lentItem.Status == "Pending")
             {
                 lentItem.Status = LentItemsStatus.Borrowed.ToString();
-                lentItem.LentAt = DateTime.Now;
+                lentItem.LentAt = DateTime.UtcNow;
                 await _repository.UpdateAsync(lentItem);
 
                 if (dto.ItemId != Guid.Empty)
@@ -192,7 +194,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (item != null)
                     {
                         item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
                 }
@@ -228,142 +230,82 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
         // In Services/LentItemsService.cs
 
-        public async Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto)
+        public async Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto, Guid issuedById)
         {
-            // 1. This line maps the properties with matching names from the DTO 
-            //    (e.g., ItemId, Room, SubjectTimeSchedule).
-            //    At this point, lentItem.BorrowerFullName and lentItem.BorrowerRole are still string.Empty.
+            // Resolve the issuing staff/admin's last name for accountability
+            var issuer = await _userRepository.GetByIdAsync(issuedById);
+            var issuedByLastName = issuer?.LastName ?? string.Empty;
+            // 1. Resolve item from RFID tag scan instead of a pre-selected ItemId
+            var item = await _itemRepository.GetByRfidUidAsync(dto.TagUid);
+            if (item == null)
+                throw new KeyNotFoundException($"No item found with RFID tag '{dto.TagUid}'.");
+
+            // 2. Item availability checks
+            if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+
+            if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
+
+            var allLentItems = await _repository.GetAllAsync();
+
+            var activeLentItem = allLentItems.FirstOrDefault(li =>
+                li.ItemId == item.Id &&
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+
+            if (activeLentItem != null)
+                throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
+
+            if (dto.ReservedFor.HasValue)
+            {
+                var isAvailable = await IsItemAvailableForReservation(item.Id, dto.ReservedFor, allLentItems);
+                if (!isAvailable)
+                    throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
+            }
+
+            // 3. Build the entity — AutoMapper handles simple field copies, we set the rest manually
             var lentItem = _mapper.Map<LentItems>(dto);
 
-            // 2. *** THIS IS THE CRUCIAL PART THAT WAS LIKELY MISSING ***
-            //    We now manually populate the fields that AutoMapper couldn't figure out.
-            //    This overwrites the empty default values.
+            lentItem.ItemId = item.Id;
+            lentItem.ItemName = item.ItemName;
+            lentItem.TagUid = dto.TagUid;
             lentItem.BorrowerFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
-            if (dto.BorrowerRole != null)
-            {
-                lentItem.BorrowerRole = dto.BorrowerRole;
-            }
-            lentItem.TeacherFullName = $"{dto.TeacherFirstName} {dto.TeacherLastName}";
-
-            // 3. Set User and Teacher IDs to null for a "guest"
+            lentItem.BorrowerRole = "Guest";
             lentItem.UserId = null;
             lentItem.TeacherId = null;
+            if (dto.GuestImage != null)
+                lentItem.GuestImageUrl = await _storageService.UploadImageAsync(dto.GuestImage, "guests");
+            lentItem.Organization = dto.Organization;
+            lentItem.ContactNumber = dto.ContactNumber;
+            lentItem.Purpose = dto.Purpose;
+            lentItem.TeacherFullName = dto.SupervisorName;
+            lentItem.IssuedById = issuedById;
+            lentItem.IssuedByLastName = issuedByLastName;
 
-            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
+            // 4. Update item status based on borrow status
+            if (dto.Status.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
             {
-                lentItem.StudentIdNumber = dto.StudentIdNumber;
+                item.Status = ItemStatus.Borrowed;
+                item.UpdatedAt = DateTime.UtcNow;
+                lentItem.LentAt = DateTime.UtcNow;
+                await _itemRepository.UpdateAsync(item);
+            }
+            else if (dto.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase) ||
+                     dto.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
+                     dto.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+            {
+                item.Status = ItemStatus.Reserved;
+                item.UpdatedAt = DateTime.UtcNow;
+                await _itemRepository.UpdateAsync(item);
             }
 
-            // OPTIMIZATION: Fetch all lent items once and reuse for multiple checks
-            // This reduces database calls from 2 to 1
-            IEnumerable<LentItems>? allLentItems = null;
-
-            // Check borrowing limit for guest Teachers and Students based on StudentIdNumber
-            if (dto.BorrowerRole != null && 
-                (dto.BorrowerRole.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || 
-                 dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase)))
-            {
-                allLentItems = await _repository.GetAllAsync();
-                
-                // For guests, we track by StudentIdNumber (for students) or by full name (for teachers)
-                int activeBorrowedCount;
-                if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(dto.StudentIdNumber))
-                {
-                    activeBorrowedCount = allLentItems.Count(li => 
-                        li.StudentIdNumber == dto.StudentIdNumber && 
-                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
-                }
-                else
-                {
-                    // For guest teachers, track by full name
-                    var guestFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
-                    activeBorrowedCount = allLentItems.Count(li => 
-                        li.BorrowerFullName == guestFullName && 
-                        li.BorrowerRole == dto.BorrowerRole &&
-                        li.UserId == null && // Ensure it's a guest record
-                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
-                }
-                
-                if (activeBorrowedCount >= 3)
-                {
-                    throw new InvalidOperationException($"Borrowing limit reached. {dto.BorrowerRole}s can only have a maximum of 3 active borrowed items.");
-                }
-            }
-
-            // Update the corresponding item status based on lent item status
-            if (dto.ItemId != Guid.Empty)
-            {
-                var item = await _itemRepository.GetByIdAsync(dto.ItemId);
-                if (item != null)
-                {
-                    // Check if item condition is broken (Defective or NeedRepair)
-                    if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
-                    }
-
-                    // Check if item is already borrowed or reserved
-                    if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
-                    }
-
-                    // OPTIMIZATION: Reuse allLentItems if already fetched, otherwise fetch now
-                    // This avoids a second database call when borrowing limit was already checked
-                    if (allLentItems == null)
-                    {
-                        allLentItems = await _repository.GetAllAsync();
-                    }
-
-                    // Check if there's already an active lent item for this item
-                    var activeLentItem = allLentItems.FirstOrDefault(li => 
-                        li.ItemId == dto.ItemId && 
-                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
-                    
-                    if (activeLentItem != null)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
-                    }
-
-                    // Validate reservation time slot availability
-                    if (dto.ReservedFor.HasValue)
-                    {
-                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor, allLentItems);
-                        if (!isAvailable)
-                        {
-                            throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
-                        }
-                    }
-
-                    lentItem.ItemName = item.ItemName;
-                    
-                    // Set item status based on lent item status
-                    if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.Now;
-                        lentItem.LentAt = DateTime.Now;
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                    else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
-                             dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true ||
-                             dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.Now;
-                        // Don't set LentAt for Reserved/Pending/Approved status
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                }
-            }
-
-            // 5. Add the fully-populated object to the repository and save.
+            // 5. Persist
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync();
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
 
-            // Log the guest borrow event
+            // 6. Activity log
             var guestLogCategory = lentItem.Status switch
             {
                 "Borrowed" => ActivityLogCategory.BorrowedItem,
@@ -453,13 +395,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         if (newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Borrowed;
-                            item.UpdatedAt = DateTime.Now;
-                            entity.LentAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.LentAt = DateTime.UtcNow;
                         }
                         else if (newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Reserved;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                             
                             // Send approval notification when status changes from Pending to Approved
@@ -476,25 +418,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Reserved;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Returned", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
-                            entity.ReturnedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.ReturnedAt = DateTime.UtcNow;
                         }
                         else if (newStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Denied", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
 
@@ -562,7 +504,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
-            var scanTimestamp = DateTime.Now;
+            var scanTimestamp = DateTime.UtcNow;
 
             // Update the corresponding Item status based on LentItems status
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
@@ -590,21 +532,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     // Set item status back to Available when returned
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
                 {
                     // Set item status to Borrowed when borrowed
                     item.Status = ItemStatus.Borrowed;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Approved, set item to Reserved (approved but not yet picked up)
                 else if (dto.LentItemsStatus == LentItemsStatus.Approved)
                 {
                     item.Status = ItemStatus.Reserved;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                     
                     // Send approval notification when status changes from Pending to Approved
@@ -622,21 +564,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 else if (dto.LentItemsStatus == LentItemsStatus.Pending)
                 {
                     item.Status = ItemStatus.Reserved;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Canceled, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Denied, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Denied)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
             }
@@ -735,7 +677,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     {
                         item.Status = ItemStatus.Archived;
                     }
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
 
@@ -833,7 +775,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         // Auto-expiry: Cancel expired reservations that weren't picked up
         public async Task<int> CancelExpiredReservationsAsync()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var allLentItems = await _repository.GetAllAsync();
             
             // Find reservations that are expired (ReservedFor time has passed + grace period)
@@ -850,14 +792,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 // Update status to Canceled
                 reservation.Status = "Canceled";
-                reservation.UpdatedAt = DateTime.Now;
+                reservation.UpdatedAt = DateTime.UtcNow;
 
                 // Set item back to Available
                 var item = await _itemRepository.GetByIdAsync(reservation.ItemId);
                 if (item != null)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
 

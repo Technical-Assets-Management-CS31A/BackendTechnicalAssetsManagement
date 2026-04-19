@@ -28,9 +28,12 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // Map for Archiving: Active Entity -> Create Archive DTO
             CreateMap<LentItems, CreateArchiveLentItemsDto>()
-                // FIX: Explicitly map the active item's ID (src.Id) to the archive's foreign key (dest.LentItemId).
-                // Solves the "lentItemId: 00000000-0000..." error during Archiving.
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.GuestImageUrl, opt => opt.MapFrom(src => src.GuestImageUrl))
+                .ForMember(dest => dest.Organization, opt => opt.MapFrom(src => src.Organization))
+                .ForMember(dest => dest.ContactNumber, opt => opt.MapFrom(src => src.ContactNumber))
+                .ForMember(dest => dest.Purpose, opt => opt.MapFrom(src => src.Purpose))
+                .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => src.TeacherFullName));
 
                 
 
@@ -58,29 +61,16 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                         Condition = src.Item.Condition,
                         Status = src.Item.Status
                     } : null))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.FrontStudentIdPicture != null ?
-                    $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" :
-                    null));
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => src.FrontStudentIdPictureUrl))
+                .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src => src.GuestImageUrl));
 
             // Map for Response after Restoration (Active Entity -> Archive DTO)
             CreateMap<LentItems, ArchiveLentItemsDto>()
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom<ArchiveFrontStudentIdPictureResolver>());
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => src.FrontStudentIdPictureUrl))
+                .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src => src.GuestImageUrl));
 
             // Map for converting a retrieved Archive DTO into a Create DTO (for internal/update use)
             CreateMap<ArchiveLentItems, CreateArchiveLentItemsDto>();
-        }
-    }
-
-    public class ArchiveFrontStudentIdPictureResolver : IValueResolver<LentItems, ArchiveLentItemsDto, string?>
-    {
-        public string? Resolve(LentItems source, ArchiveLentItemsDto destination, string? destMember, ResolutionContext context)
-        {
-            if (source.FrontStudentIdPicture != null)
-            {
-                return $"data:image/png;base64,{Convert.ToBase64String(source.FrontStudentIdPicture)}";
-            }
-            return null;
         }
     }
 }

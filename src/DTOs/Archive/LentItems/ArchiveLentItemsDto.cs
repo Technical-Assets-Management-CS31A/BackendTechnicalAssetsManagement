@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -39,9 +39,16 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
 
         public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public string? FrontStudentIdPicture { get; set; }
+
+        // Guest-specific fields
+        public string? GuestImage { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+        public string? SupervisorName { get; set; }
     }
 }
