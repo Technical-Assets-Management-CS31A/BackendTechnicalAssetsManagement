@@ -74,6 +74,9 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<ArchiveLentItems> ArchiveLentItems { get; set; }
         public DbSet<ArchiveUser> ArchiveUsers { get; set; }
 
+        // Activity Logs
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.
         /// EF Core calls this method once when it is building its internal model of your database.

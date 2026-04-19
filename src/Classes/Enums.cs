@@ -13,6 +13,7 @@
 
         public enum ItemStatus { Available, Borrowed, Reserved, Unavailable, Archived }
 
+        public enum ActivityLogCategory { BorrowedItem, Returned, Reserved, Approved, Denied, Canceled, StatusChange, General }
     }
 }
     

@@ -7,6 +7,7 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task<LentItems?> GetByIdAsync(Guid id);
         Task<IEnumerable<LentItems>> GetAllAsync();
         Task<IEnumerable<LentItems>> GetByDateTime(DateTime dateTime);
+        Task<IEnumerable<LentItems>> GetAllBorrowedItemsAsync();
 
         Task<LentItems> AddAsync(LentItems lentItem);
         Task UpdateAsync(LentItems lentItem);

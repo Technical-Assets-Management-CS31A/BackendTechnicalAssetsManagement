@@ -21,8 +21,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
+        private readonly IActivityLogService _activityLogService;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService, IActivityLogService activityLogService)
         {
             _repository = repository;
             _mapper = mapper;
@@ -31,6 +32,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _archiveLentItemsService = archiveLentItemsService;
             _userService = userService;
             _notificationService = notificationService;
+            _activityLogService = activityLogService;
         }
 
         // Create
@@ -209,6 +211,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 );
             }
 
+            // Log the initial borrow event
+            var logCategory = lentItem.Status switch
+            {
+                "Borrowed" => ActivityLogCategory.BorrowedItem,
+                "Returned" => ActivityLogCategory.Returned,
+                "Approved" => ActivityLogCategory.Approved,
+                "Denied"   => ActivityLogCategory.Denied,
+                "Canceled" => ActivityLogCategory.Canceled,
+                _          => ActivityLogCategory.General
+            };
+            await WriteLogAsync(logCategory, $"Borrow request created with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
+
             // 5. Map the fully created and updated entity to the DTO and return it
             return _mapper.Map<LentItemsDto>(lentItem);
         }
@@ -348,6 +362,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.SaveChangesAsync();
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
+
+            // Log the guest borrow event
+            var guestLogCategory = lentItem.Status switch
+            {
+                "Borrowed" => ActivityLogCategory.BorrowedItem,
+                "Approved" => ActivityLogCategory.Approved,
+                "Denied"   => ActivityLogCategory.Denied,
+                "Canceled" => ActivityLogCategory.Canceled,
+                _          => ActivityLogCategory.General
+            };
+            await WriteLogAsync(guestLogCategory, $"Guest borrow request created with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
+
             return _mapper.Map<LentItemsDto>(createdItem);
         }
 
@@ -356,6 +382,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         public async Task<IEnumerable<LentItemsDto>> GetAllAsync()
         {
             var items = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<LentItemsDto>>(items);
+        }
+
+        public async Task<IEnumerable<LentItemsDto>> GetAllBorrowedItemsAsync()
+        {
+            var items = await _repository.GetAllBorrowedItemsAsync();
             return _mapper.Map<IEnumerable<LentItemsDto>>(items);
         }
 
@@ -477,6 +509,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         oldStatus,
                         newStatus
                     );
+
+                    // Log the status transition
+                    var updateLogCategory = newStatus switch
+                    {
+                        "Borrowed" => ActivityLogCategory.BorrowedItem,
+                        "Returned" => ActivityLogCategory.Returned,
+                        "Approved" => ActivityLogCategory.Approved,
+                        "Denied"   => ActivityLogCategory.Denied,
+                        "Canceled" => ActivityLogCategory.Canceled,
+                        _          => ActivityLogCategory.StatusChange
+                    };
+                    await WriteLogAsync(updateLogCategory, $"Status changed from '{oldStatus}' to '{newStatus}'", entity, oldStatus, newStatus);
                 }
             }
 
@@ -597,6 +641,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
             }
 
+            var previousStatus = entity.Status;
             entity.Status = dto.LentItemsStatus.ToString();
 
             // Check the new status to decide which field to update
@@ -617,7 +662,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             await _repository.UpdateAsync(entity);
-            return await _repository.SaveChangesAsync();
+            var saved = await _repository.SaveChangesAsync();
+
+            // Log the RFID-triggered status transition
+            var scanLogCategory = dto.LentItemsStatus switch
+            {
+                LentItemsStatus.Borrowed => ActivityLogCategory.BorrowedItem,
+                LentItemsStatus.Returned => ActivityLogCategory.Returned,
+                LentItemsStatus.Approved => ActivityLogCategory.Approved,
+                LentItemsStatus.Denied   => ActivityLogCategory.Denied,
+                LentItemsStatus.Canceled => ActivityLogCategory.Canceled,
+                LentItemsStatus.Reserved => ActivityLogCategory.Reserved,
+                _                        => ActivityLogCategory.StatusChange
+            };
+            await WriteLogAsync(scanLogCategory, $"RFID scan: status set to '{dto.LentItemsStatus}'", entity, previousStatus, dto.LentItemsStatus.ToString());
+
+            return saved;
         }
         public async Task<bool> UpdateHistoryVisibility(Guid lentItemId, Guid userId, bool isHidden)
         {
@@ -699,6 +759,43 @@ namespace BackendTechnicalAssetsManagement.src.Services
             catch (Exception ex)
             {
                 return (false, $"Archive operation failed: {ex.Message}");
+            }
+        }
+
+        // Helper: write one activity log entry without blocking the main flow
+        private async Task WriteLogAsync(
+            ActivityLogCategory category,
+            string action,
+            LentItems lentItem,
+            string? previousStatus,
+            string? newStatus)
+        {
+            try
+            {
+                var item = lentItem.Item ?? (lentItem.ItemId != Guid.Empty
+                    ? await _itemRepository.GetByIdAsync(lentItem.ItemId)
+                    : null);
+
+                await _activityLogService.LogAsync(
+                    category: category,
+                    action: action,
+                    actorUserId: lentItem.UserId ?? lentItem.TeacherId,
+                    actorName: lentItem.BorrowerFullName,
+                    actorRole: lentItem.BorrowerRole,
+                    itemId: lentItem.ItemId == Guid.Empty ? null : lentItem.ItemId,
+                    itemName: lentItem.ItemName,
+                    itemSerialNumber: item?.SerialNumber,
+                    lentItemId: lentItem.Id,
+                    previousStatus: previousStatus,
+                    newStatus: newStatus,
+                    borrowedAt: lentItem.LentAt,
+                    returnedAt: lentItem.ReturnedAt,
+                    reservedFor: lentItem.ReservedFor,
+                    remarks: lentItem.Remarks);
+            }
+            catch
+            {
+                // Logging must never break the main transaction
             }
         }
 
