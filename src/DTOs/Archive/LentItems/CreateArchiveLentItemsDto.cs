@@ -32,5 +32,11 @@
 
         public byte[]? FrontStudentIdPicture { get; set; }
 
+        // Guest-specific fields
+        public byte[]? GuestImage { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+        public string? SupervisorName { get; set; }
     }
 }

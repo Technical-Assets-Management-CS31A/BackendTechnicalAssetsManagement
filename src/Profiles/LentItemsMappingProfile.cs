@@ -18,6 +18,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null
                         ? $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}"
+                        : null))
+                .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src =>
+                    src.GuestImage != null
+                        ? $"data:image/png;base64,{Convert.ToBase64String(src.GuestImage)}"
                         : null));
 
             CreateMap<CreateLentItemDto, LentItems>()
@@ -34,7 +38,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<ScanLentItemDto , LentItems>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            CreateMap<CreateLentItemsForGuestDto, LentItems>();
+            CreateMap<CreateLentItemsForGuestDto, LentItems>()
+                .ForMember(dest => dest.ItemId, opt => opt.Ignore())   // resolved from TagUid in service
+                .ForMember(dest => dest.ItemName, opt => opt.Ignore()) // resolved from TagUid in service
+                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore()) // always set to "Guest" in service
+                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore()); // built in service
         }
     }
 }

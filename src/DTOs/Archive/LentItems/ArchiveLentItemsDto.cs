@@ -43,5 +43,12 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public string? FrontStudentIdPicture { get; set; }
+
+        // Guest-specific fields
+        public string? GuestImage { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+        public string? SupervisorName { get; set; }
     }
 }

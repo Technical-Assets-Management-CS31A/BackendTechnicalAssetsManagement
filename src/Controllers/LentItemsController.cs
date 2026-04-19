@@ -36,15 +36,11 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
         {
-            // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
-            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
-            {
-                var badRequestResponse = ApiResponse<LentItemsDto>.FailResponse("Student ID number is required for students.");
-                return BadRequest(badRequestResponse);
-            }
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var issuedById))
+                return Unauthorized(ApiResponse<LentItemsDto>.FailResponse("User not authenticated."));
 
-            var created = await _service.AddForGuestAsync(dto);
-            // You can still use GetById to retrieve the newly created item
+            var created = await _service.AddForGuestAsync(dto, issuedById);
             var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Guest - Item Listed Successfully.");
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }

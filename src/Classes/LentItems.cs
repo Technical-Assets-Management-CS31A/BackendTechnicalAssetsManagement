@@ -39,6 +39,16 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed
         public string? StudentRfid { get; set; }  // RFID UID of the student's ID card
 
+        // Guest-specific fields
+        public byte[]? GuestImage { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+
+        // Accountability: the staff/admin who processed the guest borrow
+        public Guid? IssuedById { get; set; }
+        public string? IssuedByLastName { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

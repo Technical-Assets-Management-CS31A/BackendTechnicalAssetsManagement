@@ -3,6 +3,7 @@ using System;
 using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260418174403_GuestLentItemsRefactor")]
+    partial class GuestLentItemsRefactor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,16 +201,10 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ContactNumber")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
-                        .HasColumnType("bytea");
-
-                    b.Property<byte[]>("GuestImage")
                         .HasColumnType("bytea");
 
                     b.Property<bool>("IsHiddenFromUser")
@@ -222,12 +219,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<DateTime?>("LentAt")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Organization")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Purpose")
-                        .HasColumnType("text");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("text");
@@ -356,7 +347,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Ana",
                             LastName = "Reyes",
                             OriginalUserId = new Guid("00000001-0000-0000-0000-000000000004"),
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = 1,
                             Username = "areyes"
@@ -465,7 +456,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             ItemMake = "JBL",
                             ItemName = "Portable Bluetooth Speaker",
                             ItemType = "Speaker",
-                            RfidUid = "RFID-ITEM-003",
                             SerialNumber = "SN-SPK-003",
                             Status = "Available",
                             UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -492,7 +482,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             ItemMake = "Keychron",
                             ItemName = "Mechanical Keyboard",
                             ItemType = "Peripheral",
-                            RfidUid = "RFID-ITEM-005",
                             SerialNumber = "SN-KB-005",
                             Status = "Available",
                             UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -506,7 +495,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             ItemMake = "Generic",
                             ItemName = "Extension Wire 15ft",
                             ItemType = "Cable",
-                            RfidUid = "RFID-ITEM-006",
                             SerialNumber = "SN-EXT-006",
                             Status = "Available",
                             UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -553,26 +541,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ContactNumber")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<byte[]>("FrontStudentIdPicture")
                         .HasColumnType("bytea");
 
-                    b.Property<byte[]>("GuestImage")
-                        .HasColumnType("bytea");
-
                     b.Property<bool>("IsHiddenFromUser")
                         .HasColumnType("boolean");
-
-                    b.Property<Guid?>("IssuedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("IssuedByLastName")
-                        .HasColumnType("text");
 
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
@@ -583,12 +559,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<DateTime?>("LentAt")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Organization")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Purpose")
-                        .HasColumnType("text");
 
                     b.Property<string>("Remarks")
                         .HasColumnType("text");
@@ -821,7 +791,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "superadmin@gmail.com",
                             FirstName = "Super",
                             LastName = "Admin",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "SuperAdmin",
                             Username = "superadmin"
@@ -832,7 +802,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "maria.santos@gmail.com",
                             FirstName = "Maria",
                             LastName = "Santos",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Admin",
                             Username = "msantos"
@@ -843,7 +813,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "juan.delacruz@gmail.com",
                             FirstName = "Juan",
                             LastName = "Dela Cruz",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Admin",
                             Username = "jdelacruz"
@@ -854,7 +824,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "ana.reyes@gmail.com",
                             FirstName = "Ana",
                             LastName = "Reyes",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = "Admin",
                             Username = "areyes"
@@ -879,7 +849,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Miguel",
                             LastName = "Torres",
                             OriginalUserId = new Guid("00000002-0000-0000-0000-000000000003"),
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = 2,
                             Username = "mtorres",
@@ -938,7 +908,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Sofia",
                             LastName = "Gonzales",
                             OriginalUserId = new Guid("00000004-0000-0000-0000-000000000006"),
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = 4,
                             Username = "sgonzales",
@@ -967,7 +937,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "David",
                             LastName = "Ramos",
                             OriginalUserId = new Guid("00000003-0000-0000-0000-000000000004"),
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = 3,
                             Username = "dramos",
@@ -991,7 +961,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "carlos.mendoza@gmail.com",
                             FirstName = "Carlos",
                             LastName = "Mendoza",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Staff",
                             Username = "cmendoza",
@@ -1003,7 +973,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "rosa.garcia@gmail.com",
                             FirstName = "Rosa",
                             LastName = "Garcia",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Staff",
                             Username = "rgarcia",
@@ -1015,7 +985,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "miguel.torres@gmail.com",
                             FirstName = "Miguel",
                             LastName = "Torres",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = "Staff",
                             Username = "mtorres",
@@ -1086,7 +1056,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "john.doe@gmail.com",
                             FirstName = "John",
                             LastName = "Doe",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Student",
                             Username = "jdoe",
@@ -1105,7 +1075,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "jane.smith@gmail.com",
                             FirstName = "Jane",
                             LastName = "Smith",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Student",
                             Username = "jsmith",
@@ -1124,7 +1094,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "peter.jones@gmail.com",
                             FirstName = "Peter",
                             LastName = "Jones",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Student",
                             Username = "pjones",
@@ -1143,7 +1113,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "maria.lopez@gmail.com",
                             FirstName = "Maria",
                             LastName = "Lopez",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Student",
                             Username = "mlopez",
@@ -1162,7 +1132,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "carlos.rivera@gmail.com",
                             FirstName = "Carlos",
                             LastName = "Rivera",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Student",
                             Username = "crivera",
@@ -1181,7 +1151,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "sofia.gonzales@gmail.com",
                             FirstName = "Sofia",
                             LastName = "Gonzales",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = "Student",
                             Username = "sgonzales",
@@ -1212,7 +1182,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "alice.williams@gmail.com",
                             FirstName = "Alice",
                             LastName = "Williams",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Teacher",
                             Username = "awilliams",
@@ -1224,7 +1194,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "roberto.cruz@gmail.com",
                             FirstName = "Roberto",
                             LastName = "Cruz",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Teacher",
                             Username = "rcruz",
@@ -1236,7 +1206,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "elena.fernandez@gmail.com",
                             FirstName = "Elena",
                             LastName = "Fernandez",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Active",
                             UserRole = "Teacher",
                             Username = "efernandez",
@@ -1248,7 +1218,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Email = "david.ramos@gmail.com",
                             FirstName = "David",
                             LastName = "Ramos",
-                            PasswordHash = "$2a$11$3soGz/bfe0/MV0R1jDmUK.lEHzjW/c3wG00JmTg8.svfq82pK3fSu",
+                            PasswordHash = "$2a$11$TAbD0Uied95H9OYNZdgx7uPA4PN6.PBM9CIAwB3k5cbcgMlEUskA.",
                             Status = "Inactive",
                             UserRole = "Teacher",
                             Username = "dramos",

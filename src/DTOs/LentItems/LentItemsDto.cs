@@ -44,6 +44,17 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
         public bool IsHiddenFromUser { get; set; }
 
         public string? FrontStudentIdPicture { get; set; }
+
+        // Guest-specific fields
+        public string? GuestImage { get; set; }
+        public string? Organization { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Purpose { get; set; }
+        public string? SupervisorName { get; set; }
+
+        // Accountability: the staff/admin who processed the guest borrow
+        public Guid? IssuedById { get; set; }
+        public string? IssuedByLastName { get; set; }
     }
 
 }

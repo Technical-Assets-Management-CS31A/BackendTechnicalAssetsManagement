@@ -30,7 +30,12 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<LentItems, CreateArchiveLentItemsDto>()
                 // FIX: Explicitly map the active item's ID (src.Id) to the archive's foreign key (dest.LentItemId).
                 // Solves the "lentItemId: 00000000-0000..." error during Archiving.
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src => src.GuestImage))
+                .ForMember(dest => dest.Organization, opt => opt.MapFrom(src => src.Organization))
+                .ForMember(dest => dest.ContactNumber, opt => opt.MapFrom(src => src.ContactNumber))
+                .ForMember(dest => dest.Purpose, opt => opt.MapFrom(src => src.Purpose))
+                .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => src.TeacherFullName));
 
                 
 
@@ -61,6 +66,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" :
+                    null))
+                .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src =>
+                    src.GuestImage != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(src.GuestImage)}" :
                     null));
 
             // Map for Response after Restoration (Active Entity -> Archive DTO)
