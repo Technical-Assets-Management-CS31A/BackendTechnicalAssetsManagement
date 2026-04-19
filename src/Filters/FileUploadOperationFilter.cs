@@ -5,49 +5,79 @@ namespace BackendTechnicalAssetsManagement.src.Filters
 {
     /// <summary>
     /// Swagger operation filter to properly handle file upload endpoints with IFormFile parameters.
-    /// This filter modifies the OpenAPI schema to correctly represent multipart/form-data requests.
+    /// - For endpoints where IFormFile is the ONLY parameter (e.g. import), renders a simple file picker.
+    /// - For [FromForm] model endpoints (e.g. CreateItem), ensures multipart/form-data content type
+    ///   is set and the image field is rendered as a binary file picker alongside other fields.
     /// </summary>
     public class FileUploadOperationFilter : IOperationFilter
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            // Check if any parameter is IFormFile
-            var fileParameters = context.ApiDescription.ParameterDescriptions
-                .Where(p => p.Type == typeof(IFormFile) || 
-                           (p.Type != null && p.Type.Name == "IFormFile"))
+            var parameters = context.ApiDescription.ParameterDescriptions;
+
+            // Check if any parameter is a raw IFormFile (e.g. import endpoints)
+            var rawFileParams = parameters
+                .Where(p => p.Type == typeof(IFormFile))
                 .ToList();
 
-            if (!fileParameters.Any())
-                return;
+            // Check if any parameter is a [FromForm] model that contains IFormFile properties
+            var formModelParams = parameters
+                .Where(p => p.Type != typeof(IFormFile) && p.Source?.Id == "Form")
+                .ToList();
 
-            // Clear existing parameters to avoid conflicts
-            operation.Parameters?.Clear();
-
-            // Set request body to multipart/form-data with file upload schema
-            operation.RequestBody = new OpenApiRequestBody
+            // Case 1: Raw IFormFile only (import endpoints) — simple file picker
+            if (rawFileParams.Any() && !formModelParams.Any())
             {
-                Required = true,
-                Content = new Dictionary<string, OpenApiMediaType>
+                operation.Parameters?.Clear();
+                operation.RequestBody = new OpenApiRequestBody
                 {
-                    ["multipart/form-data"] = new OpenApiMediaType
+                    Required = true,
+                    Content = new Dictionary<string, OpenApiMediaType>
                     {
-                        Schema = new OpenApiSchema
+                        ["multipart/form-data"] = new OpenApiMediaType
                         {
-                            Type = "object",
-                            Properties = new Dictionary<string, OpenApiSchema>
+                            Schema = new OpenApiSchema
                             {
-                                ["file"] = new OpenApiSchema
+                                Type = "object",
+                                Properties = new Dictionary<string, OpenApiSchema>
                                 {
-                                    Type = "string",
-                                    Format = "binary",
-                                    Description = "Upload file"
-                                }
-                            },
-                            Required = new HashSet<string> { "file" }
+                                    ["file"] = new OpenApiSchema
+                                    {
+                                        Type = "string",
+                                        Format = "binary",
+                                        Description = "Upload file (.xlsx, .xls, .csv)"
+                                    }
+                                },
+                                Required = new HashSet<string> { "file" }
+                            }
+                        }
+                    }
+                };
+                return;
+            }
+
+            // Case 2: [FromForm] model with IFormFile property — ensure binary fields render correctly
+            if (operation.RequestBody?.Content != null)
+            {
+                foreach (var content in operation.RequestBody.Content.Values)
+                {
+                    if (content.Schema?.Properties == null) continue;
+
+                    foreach (var prop in content.Schema.Properties)
+                    {
+                        // Find properties that map to IFormFile and set them as binary
+                        var matchingParam = parameters.FirstOrDefault(p =>
+                            string.Equals(p.Name, prop.Key, StringComparison.OrdinalIgnoreCase) &&
+                            p.Type == typeof(IFormFile));
+
+                        if (matchingParam != null)
+                        {
+                            prop.Value.Type = "string";
+                            prop.Value.Format = "binary";
                         }
                     }
                 }
-            };
+            }
         }
     }
 }

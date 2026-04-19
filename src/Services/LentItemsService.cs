@@ -22,8 +22,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
         private readonly IActivityLogService _activityLogService;
+        private readonly ISupabaseStorageService _storageService;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService, IActivityLogService activityLogService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, INotificationService notificationService, IActivityLogService activityLogService, ISupabaseStorageService storageService)
         {
             _repository = repository;
             _mapper = mapper;
@@ -33,6 +34,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userService = userService;
             _notificationService = notificationService;
             _activityLogService = activityLogService;
+            _storageService = storageService;
         }
 
         // Create
@@ -148,7 +150,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (user is Student student)
                     {
                         lentItem.StudentIdNumber = student.StudentIdNumber;
-                        lentItem.FrontStudentIdPicture = student.FrontStudentIdPicture;
+                        lentItem.FrontStudentIdPictureUrl = student.FrontStudentIdPictureUrl;
                     }
                 }
                 else
@@ -271,7 +273,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             lentItem.BorrowerRole = "Guest";
             lentItem.UserId = null;
             lentItem.TeacherId = null;
-            lentItem.GuestImage = dto.GuestImage;
+            if (dto.GuestImage != null)
+                lentItem.GuestImageUrl = await _storageService.UploadImageAsync(dto.GuestImage, "guests");
             lentItem.Organization = dto.Organization;
             lentItem.ContactNumber = dto.ContactNumber;
             lentItem.Purpose = dto.Purpose;

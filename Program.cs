@@ -40,7 +40,12 @@ using static BackendTechnicalAssetsManagement.src.Authorization.ViewProfileRequi
 
 #region Environment Configuration
 // Load environment variables from .env file for local development
-Env.Load();
+// Use explicit path resolution to handle different working directories (VS, dotnet run, Docker)
+var envPath = Path.Combine(AppContext.BaseDirectory, ".env");
+if (!File.Exists(envPath))
+    envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+    Env.Load(envPath);
 #endregion
 
 #region Application Builder Setup
@@ -218,9 +223,12 @@ builder.Services.AddScoped<IExcelReaderService, ExcelReaderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
+
 // Utility Services (Singleton: single instance for application lifetime)
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
 builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
+builder.Services.AddSingleton<ISupabaseStorageService, SupabaseStorageService>();
+
 #endregion
 
 #region Background Services

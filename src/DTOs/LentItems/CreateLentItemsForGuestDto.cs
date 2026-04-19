@@ -48,8 +48,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         public string Status { get; set; } = string.Empty;
 
         /// <summary>
-        /// Guest photo captured at time of borrowing (raw bytes).
+        /// Guest photo captured at time of borrowing.
         /// </summary>
-        public byte[]? GuestImage { get; set; }
+        public IFormFile? GuestImage { get; set; }
     }
 }

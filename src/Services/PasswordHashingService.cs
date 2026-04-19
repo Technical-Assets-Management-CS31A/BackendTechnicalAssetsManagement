@@ -10,6 +10,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
         public bool VerifyPassword(string password, string hash)
         {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
+                return false;
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }

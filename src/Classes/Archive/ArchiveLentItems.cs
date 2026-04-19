@@ -39,10 +39,10 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? TagUid { get; set; }       // RFID tag UID of the item being borrowed
         public string? StudentRfid { get; set; }  // RFID UID of the student's ID card
 
-        public byte[]? FrontStudentIdPicture { get; set; }
+        public string? FrontStudentIdPictureUrl { get; set; }
 
         // Guest-specific fields
-        public byte[]? GuestImage { get; set; }
+        public string? GuestImageUrl { get; set; }
         public string? Organization { get; set; }
         public string? ContactNumber { get; set; }
         public string? Purpose { get; set; }
