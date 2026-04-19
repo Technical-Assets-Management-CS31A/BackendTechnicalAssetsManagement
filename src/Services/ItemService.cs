@@ -164,9 +164,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 : LentItemsStatus.Borrowed.ToString();
 
             if (isBorrowed)
-                lentItem.ReturnedAt = DateTime.Now;
+                lentItem.ReturnedAt = DateTime.UtcNow;
             else
-                lentItem.LentAt = DateTime.Now;
+                lentItem.LentAt = DateTime.UtcNow;
 
             await _lentItemsRepository.UpdateAsync(lentItem);
             var saved = await _lentItemsRepository.SaveChangesAsync();

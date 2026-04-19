@@ -92,8 +92,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.Now;
-                        lentItem.LentAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        lentItem.LentAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
                     else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
@@ -101,7 +101,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                              dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
                         // Don't set LentAt for Reserved/Pending/Approved status
                         await _itemRepository.UpdateAsync(item);
                     }
@@ -185,7 +185,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (lentItem.Status == "Pending")
             {
                 lentItem.Status = LentItemsStatus.Borrowed.ToString();
-                lentItem.LentAt = DateTime.Now;
+                lentItem.LentAt = DateTime.UtcNow;
                 await _repository.UpdateAsync(lentItem);
 
                 if (dto.ItemId != Guid.Empty)
@@ -194,7 +194,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (item != null)
                     {
                         item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.Now;
+                        item.UpdatedAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
                 }
@@ -286,8 +286,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (dto.Status.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
             {
                 item.Status = ItemStatus.Borrowed;
-                item.UpdatedAt = DateTime.Now;
-                lentItem.LentAt = DateTime.Now;
+                item.UpdatedAt = DateTime.UtcNow;
+                lentItem.LentAt = DateTime.UtcNow;
                 await _itemRepository.UpdateAsync(item);
             }
             else if (dto.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase) ||
@@ -295,7 +295,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                      dto.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
             {
                 item.Status = ItemStatus.Reserved;
-                item.UpdatedAt = DateTime.Now;
+                item.UpdatedAt = DateTime.UtcNow;
                 await _itemRepository.UpdateAsync(item);
             }
 
@@ -395,13 +395,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         if (newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Borrowed;
-                            item.UpdatedAt = DateTime.Now;
-                            entity.LentAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.LentAt = DateTime.UtcNow;
                         }
                         else if (newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Reserved;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                             
                             // Send approval notification when status changes from Pending to Approved
@@ -418,25 +418,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Reserved;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Returned", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
-                            entity.ReturnedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.ReturnedAt = DateTime.UtcNow;
                         }
                         else if (newStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Denied", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.Now;
+                            item.UpdatedAt = DateTime.UtcNow;
                             entity.LentAt = null;
                         }
 
@@ -504,7 +504,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
-            var scanTimestamp = DateTime.Now;
+            var scanTimestamp = DateTime.UtcNow;
 
             // Update the corresponding Item status based on LentItems status
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
@@ -532,21 +532,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     // Set item status back to Available when returned
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
                 {
                     // Set item status to Borrowed when borrowed
                     item.Status = ItemStatus.Borrowed;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Approved, set item to Reserved (approved but not yet picked up)
                 else if (dto.LentItemsStatus == LentItemsStatus.Approved)
                 {
                     item.Status = ItemStatus.Reserved;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                     
                     // Send approval notification when status changes from Pending to Approved
@@ -564,21 +564,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 else if (dto.LentItemsStatus == LentItemsStatus.Pending)
                 {
                     item.Status = ItemStatus.Reserved;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Canceled, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Denied, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Denied)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
             }
@@ -677,7 +677,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     {
                         item.Status = ItemStatus.Archived;
                     }
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
 
@@ -775,7 +775,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         // Auto-expiry: Cancel expired reservations that weren't picked up
         public async Task<int> CancelExpiredReservationsAsync()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var allLentItems = await _repository.GetAllAsync();
             
             // Find reservations that are expired (ReservedFor time has passed + grace period)
@@ -792,14 +792,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 // Update status to Canceled
                 reservation.Status = "Canceled";
-                reservation.UpdatedAt = DateTime.Now;
+                reservation.UpdatedAt = DateTime.UtcNow;
 
                 // Set item back to Available
                 var item = await _itemRepository.GetByIdAsync(reservation.ItemId);
                 if (item != null)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.Now;
+                    item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
 
