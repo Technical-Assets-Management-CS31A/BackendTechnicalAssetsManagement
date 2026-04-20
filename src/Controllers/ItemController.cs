@@ -43,7 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items
         [HttpGet]
-        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
+        [Authorize(Policy = "AllUsers")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ItemDto>>>> GetAllItems()
         {
             var items = await _itemService.GetAllItemsAsync();
@@ -52,7 +52,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items/{id}
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
+        [Authorize(Policy = "AllUsers")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemById(Guid id)
         {
             var item = await _itemService.GetItemByIdAsync(id);
@@ -63,7 +63,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items/by-serial/{serialNumber}
         [HttpGet("by-serial/{serialNumber}")]
-        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
+        [Authorize(Policy = "AllUsers")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemBySerialNumber(string serialNumber)
         {
             var item = await _itemService.GetItemBySerialNumberAsync(serialNumber);
