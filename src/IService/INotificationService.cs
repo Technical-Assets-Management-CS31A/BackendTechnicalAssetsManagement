@@ -30,5 +30,11 @@ namespace BackendTechnicalAssetsManagement.src.IService
         /// Send a notification to all connected clients
         /// </summary>
         Task SendBroadcastNotificationAsync(string message, object? data = null);
+
+        /// <summary>
+        /// Send a notification to a user when their reservation expired because they did not
+        /// pick up the item within the allowed time window.
+        /// </summary>
+        Task SendReservationExpiredNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName, DateTime reservedFor);
     }
 }

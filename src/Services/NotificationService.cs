@@ -186,5 +186,46 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 _logger.LogError(ex, "Failed to send broadcast notification");
             }
         }
+
+        /// <summary>
+        /// Send a notification to a user when their reservation expired because they did not
+        /// pick up the item within the allowed time window.
+        /// Also notifies admin/staff so they are aware the item is back to available.
+        /// </summary>
+        public async Task SendReservationExpiredNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName, DateTime reservedFor)
+        {
+            try
+            {
+                var notification = new
+                {
+                    Type = "reservation_expired",
+                    LentItemId = lentItemId,
+                    ItemName = itemName,
+                    BorrowerName = borrowerName,
+                    ReservedFor = reservedFor,
+                    Message = $"Your reservation for '{itemName}' has expired because it was not picked up in time. The item is now available again.",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                // Notify the specific user who made the reservation
+                if (userId.HasValue)
+                {
+                    await _hubContext.Clients.Group($"user_{userId.Value}")
+                        .SendAsync("ReceiveReservationExpired", notification);
+                }
+
+                // Also notify admin/staff so they know the item is back to available
+                await _hubContext.Clients.Group("admin_staff")
+                    .SendAsync("ReceiveReservationExpired", notification);
+
+                _logger.LogInformation(
+                    "Reservation expired notification sent for LentItem {LentItemId} (user: {UserId}, item: {ItemName})",
+                    lentItemId, userId, itemName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send reservation expired notification for LentItem {LentItemId}", lentItemId);
+            }
+        }
     }
 }

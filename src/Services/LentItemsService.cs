@@ -120,6 +120,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 "Approved" => ActivityLogCategory.Approved,
                 "Denied"   => ActivityLogCategory.Denied,
                 "Canceled" => ActivityLogCategory.Canceled,
+                "Expired"  => ActivityLogCategory.Expired,
                 _          => ActivityLogCategory.General
             };
             await WriteLogAsync(guestLogCategory, $"Guest borrow request created with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
@@ -461,6 +462,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         "Approved" => ActivityLogCategory.Approved,
                         "Denied"   => ActivityLogCategory.Denied,
                         "Canceled" => ActivityLogCategory.Canceled,
+                        "Expired"  => ActivityLogCategory.Expired,
                         _          => ActivityLogCategory.StatusChange
                     };
                     await WriteLogAsync(updateLogCategory, $"Status changed from '{oldStatus}' to '{newStatus}'", entity, oldStatus, newStatus);
@@ -768,12 +770,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 li.ReservedFor.HasValue &&
                 li.ReservedFor.Value >= startWindow &&
                 li.ReservedFor.Value <= endWindow &&
-                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Reserved" || li.Status == "Borrowed"));
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
 
             return conflictingReservation == null;
         }
 
-        // Auto-expiry: Cancel expired reservations that weren't picked up
+        // Auto-expiry: Expire reservations that weren't picked up
         public async Task<int> CancelExpiredReservationsAsync()
         {
             var now = DateTime.UtcNow;
@@ -784,15 +786,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var expiredReservations = allLentItems.Where(li =>
                 li.ReservedFor.HasValue &&
                 li.ReservedFor.Value.AddHours(graceHours) < now &&
-                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Reserved") &&
+                (li.Status == "Pending" || li.Status == "Approved") &&
                 !li.LentAt.HasValue // Not yet picked up
             ).ToList();
 
-            int canceledCount = 0;
+            int expiredCount = 0;
             foreach (var reservation in expiredReservations)
             {
-                // Update status to Canceled
-                reservation.Status = "Canceled";
+                var oldStatus = reservation.Status;
+                
+                // Update status to Expired
+                reservation.Status = LentItemsStatus.Expired.ToString();
                 reservation.UpdatedAt = DateTime.UtcNow;
 
                 // Set item back to Available
@@ -805,15 +809,34 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
 
                 await _repository.UpdateAsync(reservation);
-                canceledCount++;
+                
+                // Send notification to the user about the expired reservation
+                await _notificationService.SendReservationExpiredNotificationAsync(
+                    reservation.Id,
+                    reservation.UserId,
+                    reservation.ItemName ?? "Unknown Item",
+                    reservation.BorrowerFullName ?? "Unknown Borrower",
+                    reservation.ReservedFor!.Value
+                );
+
+                // Log the expiry
+                await WriteLogAsync(
+                    ActivityLogCategory.Expired,
+                    $"Reservation expired - not picked up within {graceHours} hour(s) of scheduled time ({reservation.ReservedFor.Value:yyyy-MM-dd HH:mm} UTC)",
+                    reservation,
+                    oldStatus,
+                    LentItemsStatus.Expired.ToString()
+                );
+
+                expiredCount++;
             }
 
-            if (canceledCount > 0)
+            if (expiredCount > 0)
             {
                 await _repository.SaveChangesAsync();
             }
 
-            return canceledCount;
+            return expiredCount;
         }
     }
 }

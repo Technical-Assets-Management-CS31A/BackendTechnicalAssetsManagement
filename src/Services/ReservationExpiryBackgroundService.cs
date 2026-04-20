@@ -6,7 +6,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ReservationExpiryBackgroundService> _logger;
-        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(15); // Check every 15 minutes
+        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(5); // Check every 5 minutes
 
         public ReservationExpiryBackgroundService(
             IServiceProvider serviceProvider,
@@ -46,7 +46,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (canceledCount > 0)
             {
-                _logger.LogInformation($"Canceled {canceledCount} expired reservation(s).");
+                _logger.LogInformation($"Expired {canceledCount} reservation(s) that were not picked up in time.");
             }
         }
     }
