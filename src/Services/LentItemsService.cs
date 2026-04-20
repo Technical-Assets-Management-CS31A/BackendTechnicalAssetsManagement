@@ -38,198 +38,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         // Create
-        public async Task<LentItemsDto> AddAsync(CreateLentItemDto dto)
-        {
-            var lentItem = _mapper.Map<LentItems>(dto);
-            
-            // OPTIMIZATION: Fetch all lent items once and reuse for multiple checks
-            // This reduces database calls from 2 to 1
-            IEnumerable<LentItems>? allLentItems = null;
-
-            if (dto.ItemId != Guid.Empty)
-            {
-                var item = await _itemRepository.GetByIdAsync(dto.ItemId);
-                if (item != null)
-                {
-                    // Check if item condition is broken (Defective or NeedRepair)
-                    if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
-                    }
-
-                    // Check if item is already borrowed or reserved
-                    if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
-                    }
-
-                    // OPTIMIZATION: Fetch all lent items once for reuse
-                    allLentItems = await _repository.GetAllAsync();
-
-                    // Check if there's already an active lent item for this item
-                    var activeLentItem = allLentItems.FirstOrDefault(li => 
-                        li.ItemId == dto.ItemId && 
-                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
-                    
-                    if (activeLentItem != null)
-                    {
-                        throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
-                    }
-
-                    // Validate reservation time slot availability
-                    if (dto.ReservedFor.HasValue)
-                    {
-                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor, allLentItems);
-                        if (!isAvailable)
-                        {
-                            throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
-                        }
-                    }
-
-                    lentItem.ItemName = item.ItemName;
-                    
-                    // Set item status based on lent item status
-                    if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        lentItem.LentAt = DateTime.UtcNow;
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                    else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
-                             dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true ||
-                             dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        // Don't set LentAt for Reserved/Pending/Approved status
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                }
-                else
-                {
-
-                    throw new KeyNotFoundException($"Item with ID {dto.ItemId} not found.");
-                }
-            }
-            if (dto.UserId.HasValue)
-            {
-                // Validate that the user has completed their profile before allowing them to borrow
-                var (isComplete, errorMessage) = await _userService.ValidateStudentProfileComplete(dto.UserId.Value);
-                if (!isComplete)
-                {
-                    throw new InvalidOperationException($"Cannot borrow item. {errorMessage}");
-                }
-
-                // You need a method in your user repository to get a user by ID.
-                var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
-                if (user != null)
-                {
-                    // Check borrowing limit for Teachers and Students
-                    if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
-                    {
-                        // OPTIMIZATION: Reuse allLentItems if already fetched, otherwise fetch now
-                        if (allLentItems == null)
-                        {
-                            allLentItems = await _repository.GetAllAsync();
-                        }
-
-                        var activeBorrowedCount = allLentItems.Count(li => 
-                            li.UserId == dto.UserId.Value && 
-                            (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
-                        
-                        if (activeBorrowedCount >= 3)
-                        {
-                            throw new InvalidOperationException($"Borrowing limit reached. {user.UserRole}s can only have a maximum of 3 active borrowed items.");
-                        }
-                    }
-
-                    lentItem.BorrowerFullName = $"{user.FirstName} {user.LastName}";
-                    lentItem.BorrowerRole = user.UserRole.ToString();
-
-                    if (user is Student student)
-                    {
-                        lentItem.StudentIdNumber = student.StudentIdNumber;
-                        lentItem.FrontStudentIdPictureUrl = student.FrontStudentIdPictureUrl;
-                    }
-                }
-                else
-                {
-                    // Handle case where UserId is provided but not found.
-                    // You could throw an exception or handle it as a validation error.
-                    throw new KeyNotFoundException($"User with ID {dto.UserId.Value} not found.");
-                }
-            }
-            if (dto.TeacherId.HasValue)
-            {
-                // We need to load the Teacher object so AutoMapper can find the name.
-                // Assuming your repository can fetch a teacher specifically.
-                // You may need to create a `GetTeacherByIdAsync` or similar method.
-                var teacher = await _userRepository.GetByIdAsync(dto.TeacherId.Value) as Teacher;
-                if (teacher != null)
-                {
-                    // This ensures the navigation property is loaded for the subsequent mapping.
-                    lentItem.Teacher = teacher;
-                    lentItem.TeacherFullName = $"{teacher.FirstName} {teacher.LastName}";
-                }
-                else
-                {
-                    throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
-                }
-            }
-            await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync();
-
-            // TODO: Remove auto-approve before production
-            // Auto-approve pending requests from RFID borrow
-            if (lentItem.Status == "Pending")
-            {
-                lentItem.Status = LentItemsStatus.Borrowed.ToString();
-                lentItem.LentAt = DateTime.UtcNow;
-                await _repository.UpdateAsync(lentItem);
-
-                if (dto.ItemId != Guid.Empty)
-                {
-                    var item = await _itemRepository.GetByIdAsync(dto.ItemId);
-                    if (item != null)
-                    {
-                        item.Status = ItemStatus.Borrowed;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                }
-
-                await _repository.SaveChangesAsync();
-            }
-
-            // Send notification to admin/staff about new pending request
-            if (lentItem.Status == "Pending" || lentItem.Status == "Approved")
-            {
-                await _notificationService.SendNewPendingRequestNotificationAsync(
-                    lentItem.Id,
-                    lentItem.ItemName ?? "Unknown Item",
-                    lentItem.BorrowerFullName ?? "Unknown Borrower",
-                    lentItem.ReservedFor
-                );
-            }
-
-            // Log the initial borrow event
-            var logCategory = lentItem.Status switch
-            {
-                "Borrowed" => ActivityLogCategory.BorrowedItem,
-                "Returned" => ActivityLogCategory.Returned,
-                "Approved" => ActivityLogCategory.Approved,
-                "Denied"   => ActivityLogCategory.Denied,
-                "Canceled" => ActivityLogCategory.Canceled,
-                _          => ActivityLogCategory.General
-            };
-            await WriteLogAsync(logCategory, $"Borrow request created with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
-
-            // 5. Map the fully created and updated entity to the DTO and return it
-            return _mapper.Map<LentItemsDto>(lentItem);
-        }
-        // In Services/LentItemsService.cs
-
         public async Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto, Guid issuedById)
         {
             // Resolve the issuing staff/admin's last name for accountability
@@ -317,6 +125,199 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await WriteLogAsync(guestLogCategory, $"Guest borrow request created with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
 
             return _mapper.Map<LentItemsDto>(createdItem);
+        }
+
+
+        // ── Instant Borrow ────────────────────────────────────────────────────────
+        public async Task<LentItemsDto> AddBorrowAsync(CreateBorrowDto dto)
+        {
+            // 1. Validate item
+            var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+            if (item == null)
+                throw new KeyNotFoundException($"Item with ID {dto.ItemId} not found.");
+
+            if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+
+            if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
+
+            var allLentItems = await _repository.GetAllAsync();
+
+            var activeLentItem = allLentItems.FirstOrDefault(li =>
+                li.ItemId == dto.ItemId &&
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+
+            if (activeLentItem != null)
+                throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
+
+            // 2. Validate borrower
+            if (dto.UserId.HasValue)
+            {
+                var (isComplete, profileError) = await _userService.ValidateStudentProfileComplete(dto.UserId.Value);
+                if (!isComplete)
+                    throw new InvalidOperationException($"Cannot borrow item. {profileError}");
+
+                var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
+                if (user == null)
+                    throw new KeyNotFoundException($"User with ID {dto.UserId.Value} not found.");
+
+                if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
+                {
+                    var activeBorrowedCount = allLentItems.Count(li =>
+                        li.UserId == dto.UserId.Value &&
+                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+
+                    if (activeBorrowedCount >= 3)
+                        throw new InvalidOperationException($"Borrowing limit reached. {user.UserRole}s can only have a maximum of 3 active requests at a time.");
+                }
+            }
+
+            if (dto.TeacherId.HasValue)
+            {
+                var teacher = await _userRepository.GetByIdAsync(dto.TeacherId.Value) as Teacher;
+                if (teacher == null)
+                    throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
+            }
+
+            // 3. Build entity — backend owns status (always Borrowed for RFID instant borrow)
+            var lentItem = _mapper.Map<LentItems>(dto);
+            lentItem.ItemName = item.ItemName;
+            lentItem.Status = LentItemsStatus.Borrowed.ToString();
+            lentItem.LentAt = DateTime.UtcNow;
+
+            await PopulateBorrowerInfoAsync(lentItem, dto.UserId, dto.TeacherId, allLentItems);
+
+            // 4. Mark item as Borrowed immediately — user is physically taking it now
+            item.Status = ItemStatus.Borrowed;
+            item.UpdatedAt = DateTime.UtcNow;
+            await _itemRepository.UpdateAsync(item);
+
+            await _repository.AddAsync(lentItem);
+            await _repository.SaveChangesAsync();
+
+            await _notificationService.SendItemBorrowedNotificationAsync(
+                lentItem.Id, lentItem.UserId, lentItem.ItemName, lentItem.BorrowerFullName ?? "Unknown");
+
+            await WriteLogAsync(ActivityLogCategory.BorrowedItem,
+                $"Item borrowed via RFID scan with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
+
+            return _mapper.Map<LentItemsDto>(lentItem);
+        }
+
+        // ── Reservation ───────────────────────────────────────────────────────────
+        public async Task<LentItemsDto> AddReservationAsync(CreateReservationDto dto)
+        {
+            // 1. ReservedFor must be in the future
+            if (dto.ReservedFor <= DateTime.UtcNow)
+                throw new InvalidOperationException("ReservedFor must be a future date and time.");
+
+            // 2. Validate item
+            var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+            if (item == null)
+                throw new KeyNotFoundException($"Item with ID {dto.ItemId} not found.");
+
+            if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be reserved.");
+
+            if (item.Status == ItemStatus.Borrowed)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is currently borrowed and cannot be reserved.");
+
+            var allLentItems = await _repository.GetAllAsync();
+
+            var activeLentItem = allLentItems.FirstOrDefault(li =>
+                li.ItemId == dto.ItemId &&
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+
+            if (activeLentItem != null)
+                throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
+
+            var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor, allLentItems);
+            if (!isAvailable)
+                throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor:yyyy-MM-dd HH:mm}.");
+
+            // 3. Validate borrower
+            if (dto.UserId.HasValue)
+            {
+                var (isComplete, profileError) = await _userService.ValidateStudentProfileComplete(dto.UserId.Value);
+                if (!isComplete)
+                    throw new InvalidOperationException($"Cannot reserve item. {profileError}");
+
+                var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
+                if (user == null)
+                    throw new KeyNotFoundException($"User with ID {dto.UserId.Value} not found.");
+
+                if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
+                {
+                    var activeBorrowedCount = allLentItems.Count(li =>
+                        li.UserId == dto.UserId.Value &&
+                        (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+
+                    if (activeBorrowedCount >= 3)
+                        throw new InvalidOperationException($"Borrowing limit reached. {user.UserRole}s can only have a maximum of 3 active requests at a time.");
+                }
+            }
+
+            if (dto.TeacherId.HasValue)
+            {
+                var teacher = await _userRepository.GetByIdAsync(dto.TeacherId.Value) as Teacher;
+                if (teacher == null)
+                    throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
+            }
+
+            // 4. Build entity — backend owns status (always Pending for new reservations)
+            var lentItem = _mapper.Map<LentItems>(dto);
+            lentItem.ItemName = item.ItemName;
+            lentItem.Status = LentItemsStatus.Pending.ToString();
+
+            await PopulateBorrowerInfoAsync(lentItem, dto.UserId, dto.TeacherId, allLentItems);
+
+            // 5. Mark item as Reserved
+            item.Status = ItemStatus.Reserved;
+            item.UpdatedAt = DateTime.UtcNow;
+            await _itemRepository.UpdateAsync(item);
+
+            await _repository.AddAsync(lentItem);
+            await _repository.SaveChangesAsync();
+
+            // 6. Notify admin/staff
+            await _notificationService.SendNewPendingRequestNotificationAsync(
+                lentItem.Id, lentItem.ItemName, lentItem.BorrowerFullName ?? "Unknown", lentItem.ReservedFor);
+
+            await WriteLogAsync(ActivityLogCategory.General,
+                $"Reservation created for {dto.ReservedFor:yyyy-MM-dd HH:mm} with status '{lentItem.Status}'", lentItem, null, lentItem.Status);
+
+            return _mapper.Map<LentItemsDto>(lentItem);
+        }
+
+        // ── Shared helper ─────────────────────────────────────────────────────────
+        private async Task PopulateBorrowerInfoAsync(LentItems lentItem, Guid? userId, Guid? teacherId, IEnumerable<LentItems> allLentItems)
+        {
+            if (userId.HasValue)
+            {
+                var user = await _userRepository.GetByIdAsync(userId.Value);
+                if (user != null)
+                {
+                    lentItem.BorrowerFullName = $"{user.FirstName} {user.LastName}";
+                    lentItem.BorrowerRole = user.UserRole.ToString();
+
+                    if (user is Student student)
+                    {
+                        lentItem.StudentIdNumber = student.StudentIdNumber;
+                        lentItem.FrontStudentIdPictureUrl = student.FrontStudentIdPictureUrl;
+                    }
+                }
+            }
+
+            if (teacherId.HasValue)
+            {
+                var teacher = await _userRepository.GetByIdAsync(teacherId.Value) as Teacher;
+                if (teacher != null)
+                {
+                    lentItem.Teacher = teacher;
+                    lentItem.TeacherFullName = $"{teacher.FirstName} {teacher.LastName}";
+                }
+            }
         }
 
 

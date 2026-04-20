@@ -11,6 +11,12 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task SendNewPendingRequestNotificationAsync(Guid lentItemId, string itemName, string borrowerName, DateTime? reservedFor);
 
         /// <summary>
+        /// Send a notification when an item is borrowed instantly via RFID scan.
+        /// Notifies the borrower (confirmation) and admin/staff (awareness).
+        /// </summary>
+        Task SendItemBorrowedNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName);
+
+        /// <summary>
         /// Send a notification when a lent item status changes from Pending to Approved
         /// </summary>
         Task SendApprovalNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName);
