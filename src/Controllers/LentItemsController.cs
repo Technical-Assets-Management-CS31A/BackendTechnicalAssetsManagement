@@ -22,12 +22,26 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             _service = service;
         }
-        // POST: api/v1/lentitems
+        // POST: api/v1/lentItems — instant borrow via RFID scan, status set to Borrowed by backend
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Add([FromBody] CreateLentItemDto dto)
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Borrow([FromBody] CreateBorrowDto dto)
         {
-            var created = await _service.AddAsync(dto);
-            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "User - Item Listed Successfully.");
+            var created = await _service.AddBorrowAsync(dto);
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Item borrowed successfully.");
+
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
+        }
+
+        /// <summary>
+        /// Future reservation — item will be picked up at a scheduled time.
+        /// ReservedFor is required and must be in the future.
+        /// Status is set to Pending by the backend.
+        /// </summary>
+        [HttpPost("reserve")]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Reserve([FromBody] CreateReservationDto dto)
+        {
+            var created = await _service.AddReservationAsync(dto);
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Reservation created successfully.");
 
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }

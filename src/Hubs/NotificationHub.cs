@@ -3,8 +3,18 @@ using Microsoft.AspNetCore.SignalR;
 namespace BackendTechnicalAssetsManagement.src.Hubs
 {
     /// <summary>
-    /// SignalR Hub for real-time notifications
-    /// Handles live updates for status changes, approvals, and other events
+    /// SignalR Hub for real-time notifications.
+    ///
+    /// Client events emitted by the server:
+    ///   - ReceiveNewPendingRequest      → new borrow/reservation request created
+    ///   - ReceiveApprovalNotification   → reservation/request approved
+    ///   - ReceiveStatusChangeNotification → any status transition
+    ///   - ReceiveBroadcastNotification  → system-wide broadcast
+    ///   - ReceiveReservationExpired     → reservation auto-canceled (not picked up in time)
+    ///
+    /// Client methods to call on connect:
+    ///   - JoinUserGroup(userId)         → subscribe to personal notifications
+    ///   - JoinAdminStaffGroup()         → subscribe to admin/staff notifications
     /// </summary>
     public class NotificationHub : Hub
     {
@@ -16,7 +26,7 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
         }
 
         /// <summary>
-        /// Called when a client connects to the hub
+        /// Called when a client connects to the hub.
         /// </summary>
         public override async Task OnConnectedAsync()
         {
@@ -25,7 +35,7 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
         }
 
         /// <summary>
-        /// Called when a client disconnects from the hub
+        /// Called when a client disconnects from the hub.
         /// </summary>
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -34,8 +44,9 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
         }
 
         /// <summary>
-        /// Allow users to join a specific group (e.g., by userId)
-        /// This enables targeted notifications to specific users
+        /// Allow users to join a specific group (e.g., by userId).
+        /// Mobile clients should call this immediately after connecting, passing their own userId.
+        /// This enables targeted notifications such as reservation expiry alerts.
         /// </summary>
         public async Task JoinUserGroup(string userId)
         {
@@ -44,7 +55,7 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
         }
 
         /// <summary>
-        /// Allow users to leave a specific group
+        /// Allow users to leave a specific group.
         /// </summary>
         public async Task LeaveUserGroup(string userId)
         {
@@ -54,6 +65,7 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
 
         /// <summary>
         /// Allow admin/staff to join the admin_staff group for receiving pending requests
+        /// and reservation expiry alerts.
         /// </summary>
         public async Task JoinAdminStaffGroup()
         {
@@ -62,7 +74,7 @@ namespace BackendTechnicalAssetsManagement.src.Hubs
         }
 
         /// <summary>
-        /// Leave the admin_staff group
+        /// Leave the admin_staff group.
         /// </summary>
         public async Task LeaveAdminStaffGroup()
         {
