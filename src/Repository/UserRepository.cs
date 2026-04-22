@@ -139,20 +139,29 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
         }
 
-        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidCode)
         {
-            // Check if this RFID UID is already assigned to another student
+            // Look up the RFID in the RFID table by code
+            var rfidCard = await _context.Rfids
+                .FirstOrDefaultAsync(r => r.RfidCode == rfidCode);
+            
+            if (rfidCard == null)
+                return (false, $"RFID code '{rfidCode}' not found in the system. Please contact admin.");
+
+            // Check if this RFID is already assigned to another student
             var existing = await _context.Students
-                .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
+                .FirstOrDefaultAsync(s => s.RfidUid == rfidCard.RfidUid || s.RfidCode == rfidCode);
             if (existing != null && existing.Id != studentId)
-                return (false, $"RFID UID '{rfidUid}' is already registered to another student.");
+                return (false, $"RFID code '{rfidCode}' is already registered to another student.");
 
             var student = await _context.Students
                 .FirstOrDefaultAsync(s => s.Id == studentId);
             if (student == null)
                 return (false, "Student not found.");
 
-            student.RfidUid = rfidUid;
+            // Update student with both RFID UID and Code from the RFID table
+            student.RfidUid = rfidCard.RfidUid;      // The actual UID from physical card
+            student.RfidCode = rfidCard.RfidCode;    // The human-readable code
             _context.Students.Update(student);
             return (true, string.Empty);
         }

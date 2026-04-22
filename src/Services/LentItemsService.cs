@@ -140,10 +140,46 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
                 throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
 
+            var allLentItems = await _repository.GetAllAsync();
+
+            // Check if the user has an existing reservation for this item
+            if (dto.UserId.HasValue)
+            {
+                var userReservation = allLentItems.FirstOrDefault(li =>
+                    li.ItemId == dto.ItemId &&
+                    li.UserId == dto.UserId.Value &&
+                    (li.Status == "Pending" || li.Status == "Approved"));
+
+                // If user has a reservation, convert it to Borrowed instead of creating new record
+                if (userReservation != null)
+                {
+                    userReservation.Status = LentItemsStatus.Borrowed.ToString();
+                    userReservation.LentAt = DateTime.UtcNow;
+                    userReservation.Room = dto.Room ?? userReservation.Room;
+                    userReservation.SubjectTimeSchedule = dto.SubjectTimeSchedule ?? userReservation.SubjectTimeSchedule;
+                    userReservation.UpdatedAt = DateTime.UtcNow;
+
+                    // Mark item as Borrowed
+                    item.Status = ItemStatus.Borrowed;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+
+                    await _repository.UpdateAsync(userReservation);
+                    await _repository.SaveChangesAsync();
+
+                    await _notificationService.SendItemBorrowedNotificationAsync(
+                        userReservation.Id, userReservation.UserId, userReservation.ItemName, userReservation.BorrowerFullName ?? "Unknown");
+
+                    await WriteLogAsync(ActivityLogCategory.BorrowedItem,
+                        $"Reservation converted to borrowed via RFID scan", userReservation, "Pending/Approved", userReservation.Status);
+
+                    return _mapper.Map<LentItemsDto>(userReservation);
+                }
+            }
+
+            // No reservation found, proceed with normal borrow flow
             if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
                 throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
-
-            var allLentItems = await _repository.GetAllAsync();
 
             var activeLentItem = allLentItems.FirstOrDefault(li =>
                 li.ItemId == dto.ItemId &&
