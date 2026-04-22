@@ -76,7 +76,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             // Returns every record that has ever been a borrow transaction,
             // regardless of current status (Pending, Approved, Borrowed, Returned, etc.)
-            var borrowStatuses = new[] { "Pending", "Approved", "Borrowed", "Returned", "Canceled", "Denied" };
+            var borrowStatuses = new[] { "Pending", "Approved", "Borrowed", "Returned", "Canceled", "Denied", "Expired" };
 
             return await _context.LentItems
                 .Include(li => li.User)
@@ -134,6 +134,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                     li.ItemId == itemId &&
                     li.Status != "Returned" &&
                     li.Status != "Canceled" &&
+                    li.Status != "Expired" &&
                     li.Status != "Denied");
         }
     }

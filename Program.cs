@@ -126,6 +126,10 @@ builder.Services.AddAuthorization(options =>
     // Policy for operations requiring Admin, SuperAdmin, or Staff roles
     options.AddPolicy("AdminOrStaff", policy =>
         policy.RequireRole("Admin", "SuperAdmin", "Staff"));
+    
+    // Policy for all authenticated users (read access)
+    options.AddPolicy("AllUsers", policy =>
+        policy.RequireRole("Admin", "SuperAdmin", "Staff", "Teacher", "Student"));
 });
 #endregion
 #region API Documentation (Swagger/OpenAPI)
@@ -225,7 +229,8 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 
 // Utility Services (Singleton: single instance for application lifetime)
-builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+builder.Services.AddSingleton<IPasswordHashingService>(sp =>
+    new PasswordHashingService(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
 builder.Services.AddSingleton<ISupabaseStorageService, SupabaseStorageService>();
 

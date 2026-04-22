@@ -9,11 +9,11 @@
 
         public enum UserRole { SuperAdmin, Admin, Staff, Teacher, Student }
 
-        public enum  LentItemsStatus { Pending, Reserved, Approved, Denied, Canceled, Borrowed, Returned }
+        public enum  LentItemsStatus { Pending, Reserved, Approved, Denied, Canceled, Borrowed, Returned, Expired }
 
         public enum ItemStatus { Available, Borrowed, Reserved, Unavailable, Archived }
 
-        public enum ActivityLogCategory { BorrowedItem, Returned, Reserved, Approved, Denied, Canceled, StatusChange, General }
+        public enum ActivityLogCategory { BorrowedItem, Returned, Reserved, Approved, Denied, Canceled, Expired, StatusChange, General }
     }
 }
     

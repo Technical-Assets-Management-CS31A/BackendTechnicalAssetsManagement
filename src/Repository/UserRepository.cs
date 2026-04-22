@@ -81,15 +81,23 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         //}
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await _context.Users
-                .Include(u => u.LentItems
-                .Where(li => !li.IsHiddenFromUser).OrderByDescending(li => li.LentAt))
+            var user = await _context.Users
+                .Include(u => u.LentItems)
                     .ThenInclude(li => li.Item)
-                .Include(u => u.LentItems
-                    .Where(li => !li.IsHiddenFromUser) 
-                    .OrderByDescending(li => li.LentAt))
+                .Include(u => u.LentItems)
                     .ThenInclude(li => li.Teacher)
                 .FirstOrDefaultAsync(u => u.Id == id);
+
+            // Filter out hidden items after loading
+            if (user != null && user.LentItems != null)
+            {
+                user.LentItems = user.LentItems
+                    .Where(li => !li.IsHiddenFromUser)
+                    .OrderByDescending(li => li.CreatedAt)
+                    .ToList();
+            }
+
+            return user;
         }
 
         public async Task<User?> GetByIdentifierAsync(string identifier)
@@ -131,20 +139,44 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
         }
 
-        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidCode)
         {
-            // Check if this RFID UID is already assigned to another student
-            var existing = await _context.Students
-                .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
-            if (existing != null && existing.Id != studentId)
-                return (false, $"RFID UID '{rfidUid}' is already registered to another student.");
+            // Step 1: Look up the RFID in the RFID table by code
+            var rfidCard = await _context.Rfids
+                .FirstOrDefaultAsync(r => r.RfidCode == rfidCode);
+            
+            if (rfidCard == null)
+                return (false, $"RFID code '{rfidCode}' not found in the system. Please contact admin.");
 
+            // Step 2: Get the student who is trying to register
             var student = await _context.Students
                 .FirstOrDefaultAsync(s => s.Id == studentId);
+            
             if (student == null)
                 return (false, "Student not found.");
 
-            student.RfidUid = rfidUid;
+            // Step 3: Check if this student already has an RFID registered
+            if (!string.IsNullOrEmpty(student.RfidUid) || !string.IsNullOrEmpty(student.RfidCode))
+            {
+                // Check if they're trying to register the same RFID again
+                if (student.RfidCode == rfidCode)
+                    return (false, $"You have already registered this RFID card.");
+                
+                // They're trying to register a different RFID
+                return (false, $"You already have an RFID card registered (Code: {student.RfidCode}). Please contact admin to change it.");
+            }
+
+            // Step 4: Check if this RFID is already assigned to another student
+            var existingStudent = await _context.Students
+                .FirstOrDefaultAsync(s => (s.RfidUid == rfidCard.RfidUid || s.RfidCode == rfidCode) 
+                                          && s.Id != studentId);
+            
+            if (existingStudent != null)
+                return (false, $"RFID code '{rfidCode}' is already registered to another student.");
+
+            // Step 5: All validations passed - register the RFID
+            student.RfidUid = rfidCard.RfidUid;      // The actual UID from physical card
+            student.RfidCode = rfidCard.RfidCode;    // The human-readable code
             _context.Students.Update(student);
             return (true, string.Empty);
         }

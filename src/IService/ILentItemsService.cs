@@ -7,9 +7,14 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
         public interface ILentItemsService
         {
             // Create
-            Task<LentItemsDto> AddAsync(CreateLentItemDto dto);
+        /// <summary>Instant borrow via RFID — status set to Borrowed by backend.</summary>
+        Task<LentItemsDto> AddBorrowAsync(CreateBorrowDto dto);
 
-            Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto, Guid issuedById);
+        /// <summary>Future reservation — ReservedFor required, status set to Pending by backend.</summary>
+        Task<LentItemsDto> AddReservationAsync(CreateReservationDto dto);
+
+        Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto, Guid issuedById);
+
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<IEnumerable<LentItemsDto>> GetAllBorrowedItemsAsync();
@@ -37,6 +42,9 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
             // Auto-expiry
             Task<int> CancelExpiredReservationsAsync();
+
+            // Student cancel reservation
+            Task<(bool Success, string ErrorMessage)> CancelReservationAsync(Guid lentItemId, Guid userId);
 
             // Persistence
             Task<bool> SaveChangesAsync();

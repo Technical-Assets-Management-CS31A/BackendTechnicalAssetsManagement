@@ -18,14 +18,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => src.FrontStudentIdPictureUrl))
                 .ForMember(dest => dest.GuestImage, opt => opt.MapFrom(src => src.GuestImageUrl));
 
-            CreateMap<CreateLentItemDto, LentItems>()
-                .ForMember(dest => dest.LentAt, opt => opt.Ignore())
-                .ForMember(dest => dest.ItemName, opt => opt.Ignore())
-                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore())
-                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
-                .ForMember(dest => dest.StudentIdNumber, opt => opt.Ignore())
-                .ForMember(dest => dest.TeacherFullName, opt => opt.Ignore());
-
             // DTO -> Entity (for update)
             CreateMap<UpdateLentItemDto, LentItems>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -47,6 +39,27 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
                 .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore())
                 .ForMember(dest => dest.GuestImageUrl, opt => opt.Ignore());
+
+            // Instant borrow — no ReservedFor, status owned by backend
+            CreateMap<CreateBorrowDto, LentItems>()
+                .ForMember(dest => dest.LentAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ItemName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.ReservedFor, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
+
+            // Reservation — ReservedFor required, status owned by backend
+            CreateMap<CreateReservationDto, LentItems>()
+                .ForMember(dest => dest.LentAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ItemName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
         }
     }
 }

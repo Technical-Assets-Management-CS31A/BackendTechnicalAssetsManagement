@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.User;
 using System.Text.Json.Serialization;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
@@ -22,7 +23,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 
         public UserRole UserRole { get; set; }
         public string? Status { get; set; } = string.Empty;
-
     }
     public class GetStaffProfileDto : BaseProfileDto
     {
@@ -48,6 +48,9 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string Section { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;
 
+        public string? RfidUid { get; set; }
+        public string? RfidCode { get; set; }
+
         public string Street { get; set; } = string.Empty;
         public string CityMunicipality { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
@@ -56,6 +59,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? GeneratedPassword { get; set; }
 
         public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
+        
+        public List<ItemStatusCountDto> ItemSummary { get; set; } = new List<ItemStatusCountDto>();
     }
 
 }

@@ -85,6 +85,20 @@ public class UserController : ControllerBase
     {
         try
         {
+            // Get current user ID from token
+            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(currentUserIdString, out var currentUserId))
+            {
+                return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
+            }
+
+            // Check if user is trying to update their own profile or is an Admin
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+            if (currentUserRole != "Admin" && currentUserId != id)
+            {
+                return Forbid(); // Students can only update their own profile
+            }
+
             var success = await _userService.UpdateStudentProfileAsync(id, studentDto);
 
             if (!success)
@@ -241,18 +255,41 @@ public class UserController : ControllerBase
     }
 
     // POST: /api/v1/users/students/{id}/register-rfid
-    // Called by ESP32 in student RFID registration mode — posts the RFID UID to the student
+    // Called by ESP32 in student RFID registration mode — posts the RFID code to the student
     [HttpPost("students/{id}/register-rfid")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> RegisterStudentRfid(Guid id, [FromBody] RegisterStudentRfidDto dto)
     {
-        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(id, dto.RfidUid);
+        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(id, dto.RfidCode);
         if (!success)
         {
             var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
             return errorMessage.Contains("not found") ? NotFound(errorResponse) : Conflict(errorResponse);
         }
-        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidUid}' registered to student successfully."));
+        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidCode}' registered to student successfully."));
+    }
+
+    /// <summary>
+    /// Allows authenticated students to register their own RFID card.
+    /// Student must be logged in. They input the RFID code from their card.
+    /// </summary>
+    [HttpPost("students/me/register-rfid")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<object>>> RegisterMyRfid([FromBody] RegisterStudentRfidDto dto)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<object>.FailResponse("User not authenticated."));
+        }
+
+        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(userId, dto.RfidCode);
+        if (!success)
+        {
+            var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+            return errorMessage.Contains("not found") ? NotFound(errorResponse) : Conflict(errorResponse);
+        }
+        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID card registered successfully to your account."));
     }
 
     // GET: /api/v1/users/students/rfid/{rfidUid}
