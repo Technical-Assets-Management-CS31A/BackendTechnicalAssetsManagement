@@ -14,8 +14,8 @@ const char* ssid = "EjGwapo2.4G";
 const char* password = "vigheadTHEG0D2.4G";
 
 // Supabase Configuration
-const char* serverName = "https://oeyoyyxeluzaeckwpcsa.supabase.co/rest/v1/RFID";
-const char* apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9leW95eXhlbHV6YWVja3dwY3NhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjMzNjQwOCwiZXhwIjoyMDkxOTEyNDA4fQ.9jkD8StuZR5rkl_OtheP_tp_ejOY1PCS53E3yUjOEh8";
+const char* serverName = "";
+const char* apiKey = "";
 
 void setup() {
   Serial.begin(115200);
