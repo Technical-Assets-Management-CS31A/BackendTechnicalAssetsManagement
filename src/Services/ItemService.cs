@@ -71,7 +71,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (createItemDto.Image != null)
             {
-                newItem.ImageUrl = await _storageService.UploadImageAsync(createItemDto.Image, "items");
+                try
+                {
+                    newItem.ImageUrl = await _storageService.UploadImageAsync(createItemDto.Image, "items");
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to upload image: {ex.Message}", ex);
+                }
             }
 
             await _itemRepository.AddAsync(newItem);

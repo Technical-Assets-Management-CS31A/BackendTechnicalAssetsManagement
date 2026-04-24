@@ -59,7 +59,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var activeLentItem = allLentItems.FirstOrDefault(li =>
                 li.ItemId == item.Id &&
-                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
+                (li.Status == "Pending" || li.Status == "Reserved" || li.Status == "Approved" || li.Status == "Borrowed"));
 
             if (activeLentItem != null)
                 throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
@@ -90,20 +90,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
             lentItem.IssuedById = issuedById;
             lentItem.IssuedByLastName = issuedByLastName;
 
-            // 4. Update item status based on borrow status
-            if (dto.Status.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
+            // 4. Determine status from intent: if ReservedFor is set it's a reservation (Pending),
+            //    otherwise it's an immediate borrow. Never trust the client-supplied Status string
+            //    for security — the backend owns this decision.
+            bool isReservation = dto.ReservedFor.HasValue ||
+                                  dto.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase) ||
+                                  dto.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase);
+
+            if (!isReservation)
             {
                 item.Status = ItemStatus.Borrowed;
                 item.UpdatedAt = DateTime.UtcNow;
                 lentItem.LentAt = DateTime.UtcNow;
+                lentItem.Status = LentItemsStatus.Borrowed.ToString();
                 await _itemRepository.UpdateAsync(item);
             }
-            else if (dto.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase) ||
-                     dto.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
-                     dto.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+            else
             {
+                // Guest reservations always start as Pending — staff must approve before pickup
                 item.Status = ItemStatus.Reserved;
                 item.UpdatedAt = DateTime.UtcNow;
+                lentItem.Status = LentItemsStatus.Pending.ToString();
                 await _itemRepository.UpdateAsync(item);
             }
 
