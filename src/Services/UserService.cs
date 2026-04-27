@@ -38,8 +38,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
         {
-            // 1. Fetch the user object (it will be the derived type: Student, Teacher, etc.)
-            var user = await _userRepository.GetByIdAsync(userId);
+            // 1. Fetch the user object with LentItems history (it will be the derived type: Student, Teacher, etc.)
+            var user = await _userRepository.GetByIdWithHistoryAsync(userId);
             if (user == null)
             {
                 return null; // Not found
@@ -121,6 +121,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false; // Not found or not a student
             }
 
+            Console.WriteLine($"[DEBUG] Before update - StudentIdNumber: '{studentToUpdate.StudentIdNumber}', Course: '{studentToUpdate.Course}', Section: '{studentToUpdate.Section}'");
+            Console.WriteLine($"[DEBUG] DTO values - StudentIdNumber: '{dto.StudentIdNumber}', Course: '{dto.Course}', Section: '{dto.Section}', PhoneNumber: '{dto.PhoneNumber}'");
+
             // Centralized validation
             try
             {
@@ -153,10 +156,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 studentToUpdate.BackStudentIdPictureUrl = await _storageService.UploadImageAsync(dto.BackStudentIdPicture, "students/id-back");
             }
 
+            Console.WriteLine($"[DEBUG] Before AutoMapper.Map()");
             _mapper.Map(dto, studentToUpdate);
+            Console.WriteLine($"[DEBUG] After AutoMapper.Map()");
+
+            Console.WriteLine($"[DEBUG] After mapping - StudentIdNumber: '{studentToUpdate.StudentIdNumber}', Course: '{studentToUpdate.Course}', Section: '{studentToUpdate.Section}', PhoneNumber: '{studentToUpdate.PhoneNumber}'");
 
             await _userRepository.UpdateAsync(studentToUpdate);
-            return await _userRepository.SaveChangesAsync();
+            
+            var saveResult = await _userRepository.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] SaveChanges result: {saveResult}");
+            Console.WriteLine($"[DEBUG] After save - StudentIdNumber: '{studentToUpdate.StudentIdNumber}', Course: '{studentToUpdate.Course}'");
+            
+            return saveResult;
         }
 
         public async Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId)
