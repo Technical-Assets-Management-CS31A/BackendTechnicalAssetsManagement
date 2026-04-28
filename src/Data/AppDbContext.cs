@@ -86,6 +86,9 @@ namespace BackendTechnicalAssetsManagement.src.Data
         // Student RFID Registration Sessions (web/mobile-triggered, ESP32-completed)
         public DbSet<StudentRfidRegistrationSession> StudentRfidRegistrationSessions { get; set; }
 
+        // Borrow Sessions (web-triggered, ESP32-completed)
+        public DbSet<BorrowSession> BorrowSessions { get; set; }
+
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.
         /// EF Core calls this method once when it is building its internal model of your database.

@@ -23,7 +23,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _service = service;
         }
         // POST: api/v1/lentItems — instant borrow via RFID scan, status set to Borrowed by backend
+        // AllowAnonymous so the ESP32 borrow station can submit without a JWT
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> Borrow([FromBody] CreateBorrowDto dto)
         {
             var created = await _service.AddBorrowAsync(dto);
