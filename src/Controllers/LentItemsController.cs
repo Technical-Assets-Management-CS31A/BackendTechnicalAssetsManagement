@@ -120,8 +120,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // GET: api/v1/lentitems/borrowed
+        // AllowAnonymous so the ESP32 return station can query without a JWT
         [HttpGet("borrowed")]
-        [Authorize(Policy = "AdminOrStaff")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAllBorrowedItems()
         {
             var items = await _service.GetAllBorrowedItemsAsync();
@@ -147,8 +148,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // PATCH: api/v1/lentitems/{id}
+        // AllowAnonymous so the ESP32 return station can patch without a JWT
         [HttpPatch("{id}")]
-        [Authorize(Policy = "AdminOrStaff")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<object>>> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
             // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.

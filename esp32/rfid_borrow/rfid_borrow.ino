@@ -351,5 +351,21 @@ void resetSession() {
   currentState = POLLING;
 
   Serial.println("\n── Session reset — polling for next request...\n");
-  delay(3000);  // brief cooldown before resuming poll
+
+  // Give the TCP stack time to fully close all connections before next poll
+  delay(3000);
+
+  // Force WiFi reconnect to clear any stale socket state
+  if (WiFi.status() != WL_CONNECTED) {
+    connectWiFi();
+  } else {
+    WiFi.disconnect(false);
+    delay(500);
+    WiFi.reconnect();
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) {
+      delay(200);
+    }
+    Serial.printf("WiFi ready — IP: %s\n", WiFi.localIP().toString().c_str());
+  }
 }
