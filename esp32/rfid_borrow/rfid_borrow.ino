@@ -337,6 +337,23 @@ void submitBorrow() {
   http2.end();
 
   Serial.printf("Session complete HTTP %d\n", sessCode);
+
+  if (sessCode == 200) {
+    Serial.println("✓ Session closed.");
+  } else {
+    Serial.printf("✗ Failed to complete session (HTTP %d) — retrying in 2s...\n", sessCode);
+    delay(2000);
+
+    // Retry once
+    HTTPClient http3;
+    http3.setConnectTimeout(5000);
+    http3.setTimeout(10000);
+    http3.begin(sessUrl);
+    http3.addHeader("Content-Type", "application/json");
+    int retryCode = http3.POST(sessBody);
+    http3.end();
+    Serial.printf("Session complete retry HTTP %d\n", retryCode);
+  }
 }
 
 // ── Session Reset ─────────────────────────────────────────────────────────────
