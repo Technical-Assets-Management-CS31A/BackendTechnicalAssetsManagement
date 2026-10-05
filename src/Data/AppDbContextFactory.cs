@@ -22,13 +22,15 @@ namespace BackendTechnicalAssetsManagement.src.Data
             var connectionString = configuration.GetConnectionString("Supabase")
                 ?? configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Supabase connection string not found. Check your .env file.");
-
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            
+            // AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseNpgsql(connectionString);
+            optionsBuilder.UseSqlServer(connectionString);
+            // NPGSQL (Supabase/PostgreSQL): uncomment if switching back to Postgres
+            // optionsBuilder.UseNpgsql(connectionString);
 
-            Console.WriteLine($"[EF Core] Using Supabase: {connectionString.Split(';')[0]}");
+            Console.WriteLine($"[EF Core] Using SQL Server: {connectionString.Split(';')[0]}");
 
             return new AppDbContext(optionsBuilder.Options);
         }
