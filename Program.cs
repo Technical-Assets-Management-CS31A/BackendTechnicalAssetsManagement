@@ -1,6 +1,6 @@
 /// <summary>
 /// Program.cs - Entry point for the Technical Assets Management System API
-/// 
+///
 /// This file configures and initializes the ASP.NET Core web application with:
 /// - JWT Authentication & Authorization
 /// - Entity Framework with Supabase (PostgreSQL)
@@ -83,10 +83,10 @@ builder.Services.AddControllers()
     {
         // Convert enums to strings in JSON responses for better readability
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        
+
         // Allow case-insensitive property matching for incoming JSON
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        
+
         // Handle circular references in object graphs (important for EF navigation properties)
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
@@ -126,7 +126,7 @@ builder.Services.AddAuthorization(options =>
     // Policy for operations requiring Admin, SuperAdmin, or Staff roles
     options.AddPolicy("AdminOrStaff", policy =>
         policy.RequireRole("Admin", "SuperAdmin", "Staff"));
-    
+
     // Policy for all authenticated users (read access)
     options.AddPolicy("AllUsers", policy =>
         policy.RequireRole("Admin", "SuperAdmin", "Staff", "Teacher", "Student"));
@@ -145,7 +145,7 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "RESTful API for managing technical assets, lending operations, and user management"
     });
-    
+
     // Configure JWT Bearer token authentication in Swagger UI
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -156,7 +156,7 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
-    
+
     // Apply JWT authentication requirement to all endpoints
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -252,9 +252,10 @@ builder.Services.AddHostedService<ReservationDueSoonBackgroundService>();
 
 #region Database Configuration
 /// <summary>
-/// Configure Entity Framework DbContext with Supabase (PostgreSQL)
+/// Configure Entity Framework DbContext with SQL Server
 /// </summary>
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+// NPGSQL (Supabase/PostgreSQL): uncomment if switching back to Postgres
+// AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var connectionString = builder.Configuration.GetConnectionString("Supabase")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -265,7 +266,7 @@ if (string.IsNullOrEmpty(connectionString))
     var allKeys = builder.Configuration.AsEnumerable()
         .Where(x => x.Key.Contains("Connection", StringComparison.OrdinalIgnoreCase))
         .Select(x => x.Key);
-    
+
     var availableKeys = string.Join(", ", allKeys);
     throw new InvalidOperationException(
         $"Supabase connection string is not configured. " +
@@ -274,21 +275,35 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions =>
+    options.UseSqlServer(connectionString, sqlOptions =>
     {
         // Automatically retry transient failures (dropped connections, network blips).
-        // This handles the SocketException (10054) that occurs when Supabase/PostgreSQL
-        // kills idle connections after ~15 minutes and the pool tries to reuse them.
-        npgsqlOptions.EnableRetryOnFailure(
+        sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(5),
-            errorCodesToAdd: null
+            errorNumbersToAdd: null
         );
 
-        // Keep connections alive so the server doesn't close them while idle.
-        // KeepAlive sends a TCP keepalive every 30 seconds on idle connections.
-        npgsqlOptions.CommandTimeout(60);
+        sqlOptions.CommandTimeout(60);
     }));
+
+// NPGSQL (Supabase/PostgreSQL): uncomment if switching back to Postgres
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseNpgsql(connectionString, npgsqlOptions =>
+//     {
+//         // Automatically retry transient failures (dropped connections, network blips).
+//         // This handles the SocketException (10054) that occurs when Supabase/PostgreSQL
+//         // kills idle connections after ~15 minutes and the pool tries to reuse them.
+//         npgsqlOptions.EnableRetryOnFailure(
+//             maxRetryCount: 3,
+//             maxRetryDelay: TimeSpan.FromSeconds(5),
+//             errorCodesToAdd: null
+//         );
+//
+//         // Keep connections alive so the server doesn't close them while idle.
+//         // KeepAlive sends a TCP keepalive every 30 seconds on idle connections.
+//         npgsqlOptions.CommandTimeout(60);
+//     }));
 #endregion
 
 #region Health Checks
@@ -296,7 +311,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 /// Configure health checks for monitoring application and database status
 /// </summary>
 builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString, name: "Supabase PostgreSQL");
+    .AddSqlServer(connectionString, name: "SQL Server");
+    // NPGSQL: .AddNpgSql(connectionString, name: "Supabase PostgreSQL");
 #endregion
 
 #region Custom Extension Services
@@ -339,19 +355,19 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(origin =>
         {
             var uri = new Uri(origin);
-            
+
             // Allow localhost and 127.0.0.1 on any port (development)
             if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
                 return true;
-            
+
             // Allow Android emulator (10.0.2.2)
             if (origin.StartsWith("http://10.0.2.2") || origin.StartsWith("https://10.0.2.2"))
                 return true;
-            
+
             // Allow configured production origins
             if (allowedOrigins != null && allowedOrigins.Contains(origin))
                 return true;
-            
+
             return false;
         })
         .AllowAnyHeader()
