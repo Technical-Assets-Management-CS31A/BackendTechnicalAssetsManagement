@@ -12,8 +12,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
     /// A reservation is only alerted once — the lentItemId is tracked in a HashSet for
     /// the lifetime of the process so the same reservation does not spam notifications.
     ///
-    /// TIMEZONE NOTE: Npgsql.EnableLegacyTimestampBehavior is ON, which means all
-    /// DateTime values read from PostgreSQL come back as DateTimeKind.Unspecified.
+    /// TIMEZONE NOTE: SQL Server datetime2 columns carry no timezone, so all
+    /// DateTime values read from the database come back as DateTimeKind.Unspecified.
     /// The frontend sends ReservedFor as a local-time string with no timezone suffix
     /// (e.g. "2026-04-25T15:30:00"), so the DB stores local wall-clock time.
     /// We must compare using DateTime.Now (local), NOT DateTime.UtcNow, so both
@@ -84,7 +84,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // Use local wall-clock time — ReservedFor is stored as local time (no UTC offset)
             // because the frontend sends "2026-04-25T15:30:00" with no timezone suffix and
-            // Npgsql.EnableLegacyTimestampBehavior stores it as-is (Unspecified kind).
+            // SQL Server datetime2 stores it as-is (Unspecified kind).
             var nowLocal = DateTime.Now;
 
             // Window: alert for reservations due between (now - 30 min) and (now + 15 min).
